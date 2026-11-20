@@ -26,7 +26,7 @@
     if(logout)logout.addEventListener('click',async()=>{await client.auth.signOut();location.replace(LOGIN);});
     // Observer mendapat tampilan baca-saja: sembunyikan kontrol yang mengubah data atau menjalankan simulasi.
     if(profile.role==='observer'){
-      document.querySelectorAll('[data-write-action],.write-action').forEach(el=>el.hidden=true);
+      document.querySelectorAll('[data-write-action],.write-action').forEach(el=>el.hidden=true);\n      document.querySelectorAll('button:not(#logoutButton), input, select, textarea').forEach(el=>{el.disabled=true;el.setAttribute('aria-disabled','true');});
       const note=document.createElement('div');
       note.style.cssText='margin:10px auto;max-width:1200px;padding:10px 14px;background:#eaf4ff;border:1px solid #b7d8f5;border-radius:9px;color:#17466d;font:12px Arial';
       note.textContent='Mode pengamat: akses baca-saja. Fitur pengubahan data dan pengoperasian simulasi dibatasi.';
