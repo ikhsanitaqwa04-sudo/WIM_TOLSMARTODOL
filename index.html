@@ -94,7 +94,7 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
     </div>
   </header>
 
-  <div class="site-nav"><div class="nav-brand">TOLSMART <span style="color:#2685c7">•</span> ODOL</div><nav aria-label="Navigasi utama"><a href="#beranda">Beranda</a><a href="#dashboard">Dashboard</a><a href="#simulator">Simulasi WIM</a><a href="#data">Data Kendaraan</a><a href="#verifikasi">Verifikasi</a></nav><span class="nav-status">● PROTOTIPE SIMULASI</span></div>
+  <div class="site-nav"><div class="nav-brand">TOLSMART <span style="color:#2685c7">•</span> ODOL</div><nav aria-label="Navigasi utama"><a href="#beranda">Beranda</a><a href="#dashboard">Dashboard</a><a href="#area-wim">Area Sensor</a><a href="#simulator">Simulasi WIM</a><a href="#data">Data Kendaraan</a><a href="#verifikasi">Verifikasi</a></nav><span class="nav-status">● PROTOTIPE SIMULASI</span></div>
   <main class="max-w-7xl mx-auto p-6 space-y-6">
 <section class="hero" id="beranda">
  <div><span class="hero-tag">PROTOTIPE SISTEM TRANSPORTASI CERDAS</span><h2>Deteksi kendaraan ODOL melalui teknologi WIM dan sensor dimensi</h2><p>Kendaraan melintas pada area sensor. Sistem membaca berat secara dinamis, kamera ANPR mengenali identitas kendaraan, dan sensor dimensi memeriksa profil panjang, lebar, serta tinggi. Hasilnya dikirim ke dashboard untuk ditinjau petugas.</p><div class="flex flex-wrap gap-2 mt-4"><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● WIM aktif (simulasi)</span><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● ANPR & CCTV</span><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● Sensor dimensi</span></div></div>
@@ -106,6 +106,61 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
  <article class="tool-card"><b>03 · Sensor dimensi</b><p>Sensor laser atau pemindai profil memperkirakan panjang, lebar, dan tinggi kendaraan yang melintas.</p></article>
  <article class="tool-card"><b>04 · Komputer & dashboard</b><p>Data sensor dipadukan, ditandai jika ada indikasi, lalu diteruskan kepada petugas untuk pemeriksaan lanjutan.</p></article>
 </div></section>
+
+
+<section id="area-wim" class="space-y-4">
+ <div><h2 class="section-title">Visualisasi area pemeriksaan WIM</h2><p class="section-note">Rekayasa tata letak peralatan dari dua sudut pandang: tampak atas dan tampak samping. Ilustrasi ini merupakan konsep penempatan alat, bukan gambar instalasi aktual.</p></div>
+ <div class="grid lg:grid-cols-2 gap-4">
+  <article class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+   <div class="flex items-center justify-between gap-2 mb-3"><div><div class="text-xs font-bold text-sky-700">VIEW 01</div><h3 class="font-extrabold text-slate-800">Tampak atas · Area lajur WIM</h3></div><span class="text-xs rounded-full bg-sky-50 text-sky-700 px-3 py-1">TOP VIEW</span></div>
+   <svg viewBox="0 0 720 330" role="img" aria-label="Tampak atas lajur jalan tol dengan truk, kamera ANPR, sensor dimensi, loop penghitung kendaraan dan sensor WIM" style="width:100%;height:auto;border-radius:12px;background:#eaf1f7">
+    <defs><marker id="topArrow" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6" fill="#2563eb"/></marker></defs>
+    <rect x="18" y="28" width="684" height="274" rx="15" fill="#dce7ef"/><rect x="30" y="43" width="660" height="244" rx="9" fill="#35465a"/>
+    <path d="M45 165H675" stroke="#f5f7fa" stroke-width="3" stroke-dasharray="22 16"/>
+    <path d="M45 58H675M45 272H675" stroke="#dce5ed" stroke-width="3"/>
+    <text x="48" y="83" fill="#dbe7f1" font-size="12" font-weight="700">LAJUR KENDARAAN · ARAH PERJALANAN</text>
+    <path d="M85 118H630" stroke="#4bd3f1" stroke-width="3" stroke-dasharray="7 7" marker-end="url(#topArrow)"/>
+    <g transform="translate(275 128)"><rect x="0" y="0" width="130" height="70" rx="9" fill="#e2a83b" stroke="#fff" stroke-width="3"/><rect x="12" y="10" width="104" height="50" rx="5" fill="#c78b29"/><rect x="8" y="8" width="22" height="54" rx="3" fill="#9bc5dd"/><rect x="100" y="8" width="22" height="54" rx="3" fill="#9bc5dd"/><text x="65" y="39" text-anchor="middle" fill="#fff" font-size="13" font-weight="800">TRUK</text></g>
+    <g stroke="#56d5f2" stroke-width="3" fill="none"><rect x="240" y="105" width="200" height="116" rx="5" stroke-dasharray="8 5"/><path d="M240 105V221M440 105V221"/></g>
+    <g><rect x="170" y="49" width="36" height="25" rx="5" fill="#163b5c"/><circle cx="188" cy="61" r="6" fill="#62d9f2"/><path d="M188 74L245 122" stroke="#62d9f2" stroke-width="2" stroke-dasharray="4 4"/><text x="112" y="42" fill="#173b5b" font-size="12" font-weight="700">KAMERA ANPR</text></g>
+    <g><rect x="477" y="49" width="36" height="25" rx="5" fill="#163b5c"/><circle cx="495" cy="61" r="6" fill="#62d9f2"/><path d="M495 74L428 123" stroke="#62d9f2" stroke-width="2" stroke-dasharray="4 4"/><text x="526" y="65" fill="#173b5b" font-size="12" font-weight="700">CCTV</text></g>
+    <g fill="none" stroke="#e9c85b" stroke-width="4"><rect x="250" y="91" width="180" height="14" rx="3"/><rect x="250" y="221" width="180" height="14" rx="3"/></g>
+    <text x="455" y="244" fill="#fff1b4" font-size="12" font-weight="700">SENSOR DIMENSI / LASER</text>
+    <g fill="#62d9f2" stroke="#d8f7ff" stroke-width="2"><rect x="230" y="258" width="220" height="9" rx="3"/><rect x="230" y="88" width="220" height="9" rx="3"/></g>
+    <text x="52" y="250" fill="#b9eefa" font-size="12" font-weight="700">PLAT WIM / SENSOR BEBAN</text>
+    <path d="M178 240L226 263" stroke="#b9eefa" stroke-width="2"/>
+    <g><circle cx="560" cy="210" r="18" fill="#0f2942"/><path d="M550 210h20M560 200v20" stroke="#69e3ff" stroke-width="3"/><text x="588" y="214" fill="#fff" font-size="12">Penghitung</text><text x="588" y="229" fill="#fff" font-size="12">kendaraan</text></g>
+   </svg>
+   <div class="grid grid-cols-2 gap-2 mt-3 text-xs"><div class="rounded-lg bg-slate-50 p-3 text-slate-700"><b>Deteksi identitas</b><p class="mt-1 text-slate-500">Kamera ANPR dan CCTV merekam kendaraan serta pelat nomor.</p></div><div class="rounded-lg bg-slate-50 p-3 text-slate-700"><b>Deteksi kendaraan</b><p class="mt-1 text-slate-500">Loop / sensor lajur menghitung kendaraan yang melewati titik pemeriksaan.</p></div></div>
+  </article>
+  <article class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+   <div class="flex items-center justify-between gap-2 mb-3"><div><div class="text-xs font-bold text-sky-700">VIEW 02</div><h3 class="font-extrabold text-slate-800">Tampak samping · Portal sensor</h3></div><span class="text-xs rounded-full bg-sky-50 text-sky-700 px-3 py-1">SIDE VIEW</span></div>
+   <svg viewBox="0 0 720 330" role="img" aria-label="Tampak samping truk melewati portal WIM dilengkapi kamera ANPR, sensor laser dimensi, penghitung kendaraan dan sensor berat di jalan" style="width:100%;height:auto;border-radius:12px;background:#eaf1f7">
+    <defs><linearGradient id="sideSky" x2="0" y2="1"><stop stop-color="#eaf5fc"/><stop offset="1" stop-color="#d7e5ef"/></linearGradient></defs>
+    <rect x="18" y="25" width="684" height="280" rx="15" fill="url(#sideSky)"/><rect x="30" y="225" width="660" height="62" rx="5" fill="#46566a"/><path d="M30 257H690" stroke="#f4f6f8" stroke-width="3" stroke-dasharray="28 18"/>
+    <path d="M205 64V225M510 64V225M205 64H510" stroke="#60788d" stroke-width="15" fill="none"/><path d="M205 64H510" stroke="#a9bdcc" stroke-width="9"/>
+    <g fill="#183b5b"><rect x="235" y="60" width="35" height="22" rx="4"/><rect x="337" y="60" width="35" height="22" rx="4"/><rect x="445" y="60" width="35" height="22" rx="4"/></g>
+    <g stroke="#22b8d7" stroke-width="2.5" stroke-dasharray="5 5"><path d="M252 82V190"/><path d="M354 82V190"/><path d="M462 82V190"/></g>
+    <g transform="translate(250 135)"><rect x="0" y="15" width="185" height="67" rx="5" fill="#327da5" stroke="#fff" stroke-width="2"/><path d="M185 35h48l34 31v16H185z" fill="#e1aa3d" stroke="#fff" stroke-width="2"/><path d="M194 41h34l23 22h-57z" fill="#b9d8e9"/><circle cx="48" cy="88" r="17" fill="#172537" stroke="#b8c8d4" stroke-width="5"/><circle cx="48" cy="88" r="5" fill="#dbe5ec"/><circle cx="197" cy="88" r="17" fill="#172537" stroke="#b8c8d4" stroke-width="5"/><circle cx="197" cy="88" r="5" fill="#dbe5ec"/></g>
+    <g><rect x="165" y="96" width="30" height="21" rx="4" fill="#153d5e"/><circle cx="180" cy="106" r="5" fill="#69e3ff"/><path d="M180 117L250 157" stroke="#153d5e" stroke-width="2" stroke-dasharray="4 4"/><text x="55" y="91" fill="#183b5b" font-size="12" font-weight="700">KAMERA ANPR</text></g>
+    <g><rect x="520" y="92" width="42" height="25" rx="4" fill="#153d5e"/><circle cx="541" cy="104" r="6" fill="#69e3ff"/><path d="M541 117L460 150" stroke="#153d5e" stroke-width="2" stroke-dasharray="4 4"/><text x="570" y="101" fill="#183b5b" font-size="12" font-weight="700">CCTV</text></g>
+    <g fill="#d5f6fc" stroke="#24b7d4" stroke-width="2"><rect x="300" y="219" width="95" height="8" rx="2"/><rect x="420" y="219" width="38" height="8" rx="2"/></g>
+    <text x="305" y="211" fill="#183b5b" font-size="11" font-weight="700">PLAT WIM</text>
+    <path d="M340 217L340 197" stroke="#183b5b" stroke-width="2"/>
+    <g><rect x="585" y="180" width="75" height="40" rx="7" fill="#153d5e"/><text x="622" y="196" text-anchor="middle" fill="#b9edfa" font-size="10">COUNTER</text><text x="622" y="211" text-anchor="middle" fill="#fff" font-size="13" font-weight="800">VEH 001</text></g>
+    <text x="250" y="43" fill="#183b5b" font-size="12" font-weight="700">PORTAL SENSOR DIMENSI / LASER</text>
+    <text x="48" y="282" fill="#e5eef6" font-size="11" font-weight="700">PERMUKAAN LAJUR JALAN TOL</text>
+   </svg>
+   <div class="grid grid-cols-2 gap-2 mt-3 text-xs"><div class="rounded-lg bg-slate-50 p-3 text-slate-700"><b>Sensor laser dimensi</b><p class="mt-1 text-slate-500">Memindai profil untuk estimasi panjang, lebar, dan tinggi kendaraan.</p></div><div class="rounded-lg bg-slate-50 p-3 text-slate-700"><b>Sensor WIM</b><p class="mt-1 text-slate-500">Membaca beban dinamis saat kendaraan melintas di atas sensor jalan.</p></div></div>
+  </article>
+ </div>
+ <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">KAMERA ANPR</div><div class="text-lg font-extrabold text-slate-800">Pengenalan pelat</div><div class="text-xs text-slate-500 mt-1">Identifikasi kendaraan (simulasi)</div></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">CCTV</div><div class="text-lg font-extrabold text-slate-800">Pemantauan visual</div><div class="text-xs text-slate-500 mt-1">Tampilan kamera perlu sumber video</div></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">COUNTER</div><div class="text-lg font-extrabold text-slate-800">0001 kendaraan</div><div class="text-xs text-slate-500 mt-1">Penghitung demo, bukan hitungan aktual</div></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">WIM + DIMENSI</div><div class="text-lg font-extrabold text-slate-800">Pemindaian multi-sensor</div><div class="text-xs text-slate-500 mt-1">Nilai pembacaan dari dataset simulasi</div></div>
+ </div>
+</section>
 
 <section class="sim-panel" id="simulator">
  <div class="sim-head">
