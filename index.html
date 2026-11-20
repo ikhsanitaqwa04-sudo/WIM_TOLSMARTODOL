@@ -93,6 +93,17 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
 .camera-status{font-size:10px;color:#6a7f96;margin-top:7px}
 .camera-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.camera-actions button{padding:7px 10px;border:1px solid #d8e4ef;border-radius:8px;background:#f5f9fd;color:#36536f;font-size:10px;font-weight:700}.camera-actions button:hover{background:#e8f2fc}.camera-counter{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.counter-tile{background:#fff;border:1px solid #e0e9f2;border-radius:12px;padding:12px}.counter-tile span{display:block;color:#71839a;font-size:10px}.counter-tile b{display:block;color:#183654;font-size:21px;margin-top:3px}.camera-hint{font-size:10px;color:#71839a;line-height:1.6;margin-top:8px}@media(max-width:600px){.camera-counter{grid-template-columns:1fr}}
 
+
+.video-sensor-overlay{position:absolute;inset:0;z-index:5;pointer-events:none;display:none;color:#fff;font-family:Arial,sans-serif}
+.video-sensor-overlay.active{display:block}
+.video-sensor-overlay .scan-beam{position:absolute;top:7%;bottom:13%;left:8%;width:2px;background:#ff3b3b;box-shadow:0 0 8px 3px #ff303088;transition:left .12s linear}
+.video-sensor-overlay .scan-beam:before{content:"LASER SCAN";position:absolute;top:-18px;left:5px;white-space:nowrap;background:#a51d28e8;border-radius:3px;padding:3px 5px;font-size:9px;font-weight:800}
+.video-sensor-overlay .scale-zone{position:absolute;left:8%;right:8%;bottom:7%;height:6px;border:1px solid #ffd166;background:#ffd16635;box-shadow:0 0 9px #ffc14b88}
+.video-sensor-overlay .readout{position:absolute;top:8px;right:8px;background:#0b2339e8;border:1px solid #73c8ff;border-radius:7px;padding:7px 9px;font-size:10px;line-height:1.55;min-width:130px}
+.video-sensor-overlay .readout b{color:#7ee7c0}
+.video-sensor-overlay .scan-caption{position:absolute;left:8px;bottom:17px;background:#0b2339d9;border-radius:5px;padding:4px 7px;font-size:9px}
+.video-sensor-overlay .scan-caption.done{background:#075b45e8}
+
 .side-sim{position:absolute;inset:0;overflow:hidden;background:linear-gradient(#dff4fb 0 48%,#8797a3 48% 53%,#293747 53% 100%);color:#fff}
 .side-sim .sim-skyline{position:absolute;left:0;right:0;top:35%;height:18%;background:linear-gradient(90deg,#8aa17f,#b6c4a0 25%,#728e77 55%,#a7b99b);opacity:.8}
 .side-sim .sim-road{position:absolute;left:0;right:0;bottom:0;height:48%;background:repeating-linear-gradient(90deg,transparent 0 70px,#dce4e9 71px 104px,transparent 105px 175px);background-position:center 80%;background-size:100% 3px;background-repeat:no-repeat}
@@ -171,7 +182,7 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
   </article>
   <article class="camera-card">
    <div class="flex justify-between items-center gap-2 mb-3"><div><div class="text-xs font-extrabold text-sky-700">CAMERA 02</div><h3 class="font-extrabold text-slate-800">Kamera tampak samping (Side View)</h3></div><span class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600"><span class="camera-live-dot" id="dotSide"></span><span id="stateSide">Belum terhubung</span></span></div>
-   <div class="camera-frame"><video id="videoSide" controls muted playsinline></video><div class="side-sim" id="sideSimulation">
+   <div class="camera-frame"><video id="videoSide" controls muted playsinline></video><div class="video-sensor-overlay" id="videoSensorOverlay"><div class="scan-beam" id="videoScanBeam"></div><div class="scale-zone"></div><div class="readout" id="videoSensorReadout">WIM: MENUNGGU<br>Laser: STANDBY</div><div class="scan-caption" id="videoScanCaption">OVERLAY SIMULASI · MENGIKUTI PEMUTARAN VIDEO</div></div><div class="side-sim" id="sideSimulation">
     <div class="sim-skyline"></div><div class="sim-road"></div><div class="overlay"><span>CAM 02 · SIDE PROFILE / SIMULATION</span><span>● SIMULASI AKTIF</span></div>
     <div class="gantry"></div><div class="sensor-head" title="Sensor laser dimensi"></div><div class="laser"></div>
     <div class="truck"><div class="truck-label">ANPR · DETEKSI DIMENSI</div><svg viewBox="0 0 420 150" role="img" aria-label="Ilustrasi truk tampak samping melintasi sensor dan timbangan"><rect x="20" y="35" width="245" height="85" rx="5" fill="#e9edf1" stroke="#263f55" stroke-width="4"/><path d="M265 70 L320 70 L365 100 L365 120 L265 120Z" fill="#1976b9" stroke="#263f55" stroke-width="4"/><path d="M320 75 L350 75 L365 98 L320 98Z" fill="#9ed8f3" stroke="#263f55" stroke-width="3"/><rect x="35" y="48" width="210" height="9" fill="#9eb0bf"/><rect x="35" y="65" width="210" height="45" fill="#d1dbe3"/><path d="M45 75 H235 M45 91 H235" stroke="#9aabba" stroke-width="2"/><circle cx="85" cy="122" r="18" fill="#182b3c"/><circle cx="85" cy="122" r="8" fill="#aab8c5"/><circle cx="300" cy="122" r="18" fill="#182b3c"/><circle cx="300" cy="122" r="8" fill="#aab8c5"/><circle cx="350" cy="122" r="18" fill="#182b3c"/><circle cx="350" cy="122" r="8" fill="#aab8c5"/></svg></div>
@@ -524,6 +535,42 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
       cameraSetStatus(slot,'Sumber video diputus',false);
       updateCameraCounters();
     }
+    function updateVideoSensorOverlay(slot){
+      if(slot!=='Side') return;
+      const video=document.getElementById('videoSide');
+      const overlay=document.getElementById('videoSensorOverlay');
+      const beam=document.getElementById('videoScanBeam');
+      const readout=document.getElementById('videoSensorReadout');
+      const caption=document.getElementById('videoScanCaption');
+      const hasVideo=!!video.src && Number.isFinite(video.duration) && video.duration>0;
+      overlay.classList.toggle('active',hasVideo);
+      if(!hasVideo) return;
+      const progress=Math.max(0,Math.min(1,video.currentTime/video.duration));
+      beam.style.left=(8+progress*84)+'%';
+      const v=simSelected();
+      // Demonstration timing window: axle crossing is represented by a configurable portion of the clip.
+      const crossing=progress>=0.42 && progress<=0.68;
+      const passed=progress>0.68;
+      if(crossing){
+        readout.innerHTML='WIM: <b>'+v.Berat_WIM_Ton.toFixed(1)+' ton</b><br>JBI: '+v.JBI_Ton.toFixed(1)+' ton<br>Laser: <b>MEMINDAI</b>';
+        caption.textContent='RODA MELINTASI ZONA TIMBANG · PEMBACAAN SIMULASI';
+        caption.classList.add('done');
+        document.getElementById('sensorState').textContent='PEMINDAIAN VIDEO (SIMULASI)';
+        document.getElementById('sensorWeight').textContent=v.Berat_WIM_Ton.toFixed(1)+' ton';
+        document.getElementById('sensorJbi').textContent=v.JBI_Ton.toFixed(1)+' ton';
+        document.getElementById('sensorHeight').textContent=v.Tinggi_m.toFixed(2)+' m';
+        document.getElementById('sensorWidth').textContent=v.Lebar_m.toFixed(2)+' m';
+        document.getElementById('sensorLength').textContent=v.Panjang_m.toFixed(2)+' m';
+        document.getElementById('sensorPlate').textContent=v.ID_Kendaraan+' (data demo)';
+        document.getElementById('scaleState').textContent='ZONA TIMBANG';
+        document.getElementById('scaleDisplay').innerHTML=Math.round(v.Berat_WIM_Ton*1000).toLocaleString('id-ID')+' <span class="text-sm">kg</span>';
+        document.getElementById('scaleBar').style.width=Math.min(100,(v.Berat_WIM_Ton/40)*100)+'%';
+      }else{
+        readout.innerHTML='WIM: <b>'+(passed?'SELESAI':'MENUNGGU')+'</b><br>Laser: '+(passed?'PEMINDAIAN SELESAI':'MENGIKUTI VIDEO');
+        caption.textContent=passed?'PEMINDAIAN SIMULASI SELESAI':'OVERLAY SIMULASI · MENGIKUTI PEMUTARAN VIDEO';
+        caption.classList.remove('done');
+      }
+    }
     function cameraSetStatus(slot,label,connected){
       const state=document.getElementById('state'+slot);
       const dot=document.getElementById('dot'+slot);
@@ -564,6 +611,11 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
         cameraSetStatus(slot,'Browser tidak mendukung HLS',false);
       }
     }
+    const sideVideo=document.getElementById('videoSide');
+    ['timeupdate','play','pause','seeked','loadedmetadata'].forEach(evt=>{
+      sideVideo.addEventListener(evt,()=>updateVideoSensorOverlay('Side'));
+    });
+    sideVideo.addEventListener('ended',()=>updateVideoSensorOverlay('Side'));
     ['Top','Side'].forEach(slot=>{
       document.getElementById('file'+slot).addEventListener('change',()=>{if(document.getElementById('file'+slot).files[0])connectCamera(slot);});
     });
