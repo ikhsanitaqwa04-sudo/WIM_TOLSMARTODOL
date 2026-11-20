@@ -8,6 +8,34 @@
 
 <style>
 .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:center;background:linear-gradient(115deg,#102747,#0c1b31 70%);border:1px solid #294361;border-radius:18px;overflow:hidden;padding:24px;margin-bottom:22px}.hero h2{font-size:26px;line-height:1.2;color:#fff;margin:10px 0}.hero p{color:#b8c9dc;font-size:13px;line-height:1.7}.hero img{width:100%;display:block;border-radius:13px;border:1px solid #47617c}.hero-tag{display:inline-flex;background:#183b5c;border:1px solid #416a8d;color:#9fe5f1;padding:5px 10px;border-radius:30px;font-size:10px;font-weight:800;letter-spacing:1px}.tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.tool-card{background:#111f33;border:1px solid #263d58;border-radius:13px;padding:15px}.tool-card b{display:block;color:#e8f1fa;font-size:12px;margin-bottom:6px}.tool-card p{font-size:11px;line-height:1.55;color:#9eb0c5;margin:0}.section-title{font-size:17px;font-weight:800;color:#f1f6fc;margin:5px 0}.section-note{font-size:11px;color:#91a4ba;margin:0 0 13px}.misclass{border:1px solid #72552b;background:#302615;border-radius:12px;padding:14px;color:#f8d99a;font-size:12px}.extra-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.extra-controls input{background:#101f33;border:1px solid #314760;color:#e6eef7;border-radius:8px;padding:8px 10px;font-size:12px}.extra-controls button{background:#1d5d9c;color:#fff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:700}.data-detail{color:#9fb2c7;font-size:11px;line-height:1.6}.footnote{font-size:10px;color:#8ea1b8;line-height:1.6}@media(max-width:850px){.hero{grid-template-columns:1fr}.tool-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.tool-grid{grid-template-columns:1fr}.hero{padding:16px}.hero h2{font-size:21px}}
+
+/* Interactive WIM lane simulation */
+.sim-panel{background:linear-gradient(135deg,#0d1b2d,#132b45);border:1px solid #294663;border-radius:16px;overflow:hidden}
+.sim-head{padding:19px 21px;border-bottom:1px solid #29415c;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.sim-stage{position:relative;height:260px;overflow:hidden;background:linear-gradient(#142f4c 0 57%,#26384b 57% 100%)}
+.sim-skyline{position:absolute;inset:0 0 43% 0;background:radial-gradient(circle at 80% 22%,#52718b33 0 75px,transparent 76px),linear-gradient(160deg,#173858,#0b1b30)}
+.sim-gantry{position:absolute;z-index:2;top:22px;left:16%;width:68%;height:145px;border:9px solid #9aafc2;border-bottom:0;border-radius:4px 4px 0 0}
+.sim-gantry:before{content:"";position:absolute;top:-9px;left:-12px;right:-12px;height:12px;background:#d1deea;border-radius:4px}
+.sim-sensor{position:absolute;top:0;width:35px;height:26px;background:#d8e5ef;border:3px solid #6f879d;border-radius:5px}
+.sim-sensor:after{content:"";position:absolute;left:12px;top:21px;height:100px;border-left:2px dashed #62d8f4;opacity:.85}
+.sim-sensor.a{left:16%}.sim-sensor.b{left:49%}.sim-sensor.c{right:16%}
+.sim-lane{position:absolute;bottom:0;height:43%;left:0;right:0;background:repeating-linear-gradient(90deg,transparent 0 62px,#dce5ee 63px 91px,transparent 92px 140px) center 80%/100% 4px no-repeat,#35465a}
+.sim-lane:before{content:"";position:absolute;left:0;right:0;top:13px;border-top:2px solid #91a4b7;opacity:.4}
+.sim-truck{position:absolute;z-index:3;bottom:35px;left:4%;width:190px;height:92px;transform:translateX(0);transition:left 3.8s cubic-bezier(.45,.05,.55,.95)}
+.sim-truck.moving{left:calc(100% - 205px)}
+.sim-truck svg{width:100%;height:100%;overflow:visible}
+.sim-beam{position:absolute;z-index:2;top:55px;left:50%;height:135px;border-left:3px solid #55e5ff;box-shadow:0 0 13px #55e5ff;opacity:0;transition:opacity .2s}
+.sim-beam.active{opacity:1;animation:beamPulse .65s infinite alternate}
+@keyframes beamPulse{from{filter:brightness(.7)}to{filter:brightness(1.8)}}
+.sim-stage-label{position:absolute;z-index:4;top:12px;left:12px;background:#0b1a2dcc;color:#d7f4ff;border:1px solid #42617d;padding:5px 9px;border-radius:7px;font-size:10px}
+.sim-control{background:#101f33;border:1px solid #344b65;color:#e8f2fc;border-radius:8px;padding:9px 11px;font-size:12px}
+.sim-btn{background:#1c66ad;color:#fff;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700}
+.sim-btn.alt{background:#263c55}
+.sim-result{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:15px}
+.sim-metric{background:#0e1c2e;border:1px solid #263e58;border-radius:10px;padding:11px}
+.sim-metric small{display:block;color:#91a6bd;font-size:10px}.sim-metric b{display:block;color:#f0f6fc;font-size:17px;margin-top:4px}
+.sim-stage-status{color:#8fe7f6;font-size:11px;font-weight:700}
+@media(max-width:650px){.sim-stage{height:220px}.sim-truck{width:150px;height:76px;bottom:28px}.sim-truck.moving{left:calc(100% - 160px)}.sim-result{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-gantry{height:120px}}
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
@@ -35,6 +63,24 @@
  <article class="tool-card"><b>03 · Sensor dimensi</b><p>Sensor laser atau pemindai profil memperkirakan panjang, lebar, dan tinggi kendaraan yang melintas.</p></article>
  <article class="tool-card"><b>04 · Komputer & dashboard</b><p>Data sensor dipadukan, ditandai jika ada indikasi, lalu diteruskan kepada petugas untuk pemeriksaan lanjutan.</p></article>
 </div></section>
+
+<section class="sim-panel" id="simulator">
+ <div class="sim-head">
+  <div><div class="hero-tag">LIVE DEMO · DATASET SIMULASI</div><h2 class="text-lg font-bold text-white mt-2">Simulasi kendaraan melintasi gerbang WIM</h2><p class="text-xs text-slate-400 mt-1">Pilih salah satu dari 30 kendaraan, lalu jalankan proses pemindaian.</p></div>
+  <div class="flex flex-wrap gap-2 items-center"><select id="simVehicle" class="sim-control" aria-label="Pilih kendaraan"></select><button id="simStart" class="sim-btn">▶ Mulai simulasi</button><button id="simReset" class="sim-btn alt">↺ Ulangi</button></div>
+ </div>
+ <div class="sim-stage">
+  <div class="sim-skyline"></div><div class="sim-stage-label">GERBANG PEMERIKSAAN · LAJUR WIM</div>
+  <div class="sim-gantry"><div class="sim-sensor a"></div><div class="sim-sensor b"></div><div class="sim-sensor c"></div></div>
+  <div class="sim-beam" id="simBeam"></div>
+  <div class="sim-lane"></div>
+  <div class="sim-truck" id="simTruck"><svg viewBox="0 0 220 105" role="img" aria-label="Ilustrasi truk yang bergerak"><rect x="4" y="20" width="143" height="57" rx="5" fill="#397da5" stroke="#c4d9e8" stroke-width="2"/><path d="M147 39h39l25 25v13h-64z" fill="#e5b94e" stroke="#f7dc8a" stroke-width="2"/><path d="M155 44h27l17 18h-44z" fill="#b9d9eb"/><path d="M13 29h125v39H13z" fill="#4d91b5"/><path d="M20 36h110M20 47h110M20 58h110" stroke="#a6c6d8" stroke-width="2" opacity=".6"/><circle cx="43" cy="81" r="14" fill="#101a28" stroke="#9aaebe" stroke-width="4"/><circle cx="43" cy="81" r="5" fill="#d6e1e9"/><circle cx="160" cy="81" r="14" fill="#101a28" stroke="#9aaebe" stroke-width="4"/><circle cx="160" cy="81" r="5" fill="#d6e1e9"/><circle cx="196" cy="81" r="14" fill="#101a28" stroke="#9aaebe" stroke-width="4"/><circle cx="196" cy="81" r="5" fill="#d6e1e9"/></svg></div>
+ </div>
+ <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-700"><span class="text-xs text-slate-300" id="simStageText">Status: kendaraan siap memasuki area pemeriksaan.</span><span class="sim-stage-status" id="simProgress">MENUNGGU PERINTAH</span></div>
+ <div class="sim-result" id="simResult"><div class="sim-metric"><small>Berat WIM</small><b>—</b></div><div class="sim-metric"><small>JBI</small><b>—</b></div><div class="sim-metric"><small>Dimensi P × L × T</small><b>—</b></div><div class="sim-metric"><small>Hasil indikasi</small><b>Belum dipindai</b></div></div>
+ <div class="px-4 pb-4 text-xs text-slate-400">Urutan proses: kamera ANPR membaca identitas → sensor dimensi memindai profil → plat WIM membaca berat dinamis → sistem mengirim indikasi ke petugas. Animasi ini merupakan visualisasi konseptual, bukan data sensor langsung.</div>
+</section>
+
     <!-- Summary Cards -->
     <section class="grid grid-cols-2 md:grid-cols-5 gap-4" id="summaryCards"></section>
 
@@ -154,6 +200,74 @@
         `;
       }).join('');
     }
+
+
+    // WIM visual simulation: uses the supplied 30-row teaching dataset only.
+    let simTimer = null;
+    let simBusy = false;
+    const simStages = [
+      ['Kendaraan mendekati gerbang. Kamera ANPR mengambil citra dan membaca pelat nomor.','ANPR / CCTV'],
+      ['Sensor laser memindai profil kendaraan untuk memperoleh panjang, lebar, dan tinggi.','PEMINDAIAN DIMENSI'],
+      ['Kendaraan melintasi plat sensor WIM. Sistem membaca berat dinamis dan membandingkannya dengan JBI.','PENIMBANGAN WIM'],
+      ['Data sensor dipadukan. Hasil indikasi ditampilkan untuk pemeriksaan petugas.','HASIL TERKIRIM']
+    ];
+    function simSelected(){return vehicles.find(v=>v.ID_Kendaraan===document.getElementById('simVehicle').value)||vehicles[0];}
+    function simMetrics(v){
+      const over=v.Berat_WIM_Ton-v.JBI_Ton;
+      const dims=[v.Panjang_m>parseFloat(v.Batas_PLT_m.split(' x ')[0]),v.Lebar_m>parseFloat(v.Batas_PLT_m.split(' x ')[1]),v.Tinggi_m>parseFloat(v.Batas_PLT_m.split(' x ')[2])];
+      return {over,dims};
+    }
+    function showSimResult(v){
+      const {over,dims}=simMetrics(v);
+      const overText=(over>0?'+':'')+over.toFixed(1)+' ton';
+      const dimFlags=['Panjang','Lebar','Tinggi'].filter((x,i)=>dims[i]);
+      document.getElementById('simResult').innerHTML=[
+        ['Berat WIM',v.Berat_WIM_Ton.toFixed(1)+' ton'],
+        ['JBI',v.JBI_Ton.toFixed(1)+' ton'],
+        ['Selisih berat',overText],
+        ['Dimensi P × L × T',v.Panjang_m+' × '+v.Lebar_m+' × '+v.Tinggi_m+' m']
+      ].map(([a,b])=>'<div class="sim-metric"><small>'+a+'</small><b>'+b+'</b></div>').join('')+
+      '<div class="col-span-full rounded-lg border border-slate-700 bg-slate-950/50 p-3"><div class="text-xs text-slate-400 mb-1">HASIL INDIKASI SISTEM</div><div class="font-bold text-sm '+(v.Status_Indikasi_Sistem.includes('Normal')?'text-emerald-300':'text-amber-300')+'">'+v.Status_Indikasi_Sistem+'</div><div class="text-xs text-slate-300 mt-1">Dimensi melebihi acuan: '+(dimFlags.length?dimFlags.join(', '):'Tidak ada')+'.</div><div class="text-xs text-slate-400 mt-2">Keputusan/verifikasi dataset: '+v.Status_Verifikator+'.</div></div>';
+    }
+    function resetSim(){
+      if(simTimer){clearInterval(simTimer);simTimer=null;}
+      simBusy=false;
+      document.getElementById('simTruck').classList.remove('moving');
+      document.getElementById('simBeam').classList.remove('active');
+      document.getElementById('simStageText').textContent='Status: kendaraan siap memasuki area pemeriksaan.';
+      document.getElementById('simProgress').textContent='MENUNGGU PERINTAH';
+      document.getElementById('simStart').disabled=false;
+      document.getElementById('simStart').textContent='▶ Mulai simulasi';
+      document.getElementById('simResult').innerHTML='<div class="sim-metric"><small>Berat WIM</small><b>—</b></div><div class="sim-metric"><small>JBI</small><b>—</b></div><div class="sim-metric"><small>Dimensi P × L × T</small><b>—</b></div><div class="sim-metric"><small>Hasil indikasi</small><b>Belum dipindai</b></div>';
+    }
+    function startSim(){
+      if(simBusy)return;
+      resetSim();simBusy=true;
+      const v=simSelected();
+      let step=0;
+      document.getElementById('simStart').disabled=true;
+      document.getElementById('simTruck').classList.add('moving');
+      const runStep=()=>{
+        const [message,label]=simStages[step];
+        document.getElementById('simStageText').textContent=message;
+        document.getElementById('simProgress').textContent=label;
+        document.getElementById('simBeam').classList.toggle('active',step===1||step===2);
+        if(step===3){
+          showSimResult(v);
+          document.getElementById('simStart').disabled=false;
+          document.getElementById('simStart').textContent='▶ Simulasikan lagi';
+          simBusy=false;clearInterval(simTimer);simTimer=null;return;
+        }
+        step++;
+      };
+      runStep();simTimer=setInterval(runStep,950);
+    }
+    const simSelect=document.getElementById('simVehicle');
+    simSelect.innerHTML=vehicles.map(v=>'<option value="'+v.ID_Kendaraan+'">'+v.ID_Kendaraan+' · '+v.Jenis_Kendaraan+'</option>').join('');
+    simSelect.value='VEH-011';
+    document.getElementById('simStart').addEventListener('click',startSim);
+    document.getElementById('simReset').addEventListener('click',resetSim);
+    simSelect.addEventListener('change',resetSim);
 
     renderSummary();
     renderTable();
