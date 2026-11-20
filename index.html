@@ -416,6 +416,9 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
         document.getElementById('simProgress').textContent=label;
         document.getElementById('simBeam').classList.toggle('active',step===1||step===2);
         if(step===3){
+          cameraPassCount++;
+          if(v.Status_Indikasi_Sistem === 'Indikasi ODOL') cameraOdolCount++;
+          updateCameraCounters();
           showSimResult(v);
           document.getElementById('simStart').disabled=false;
           document.getElementById('simStart').textContent='▶ Simulasikan lagi';
@@ -435,6 +438,42 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
 
     // Dual camera preview: local video files for demonstration and HLS URL for approved server streams.
     const cameraPlayers = {};
+    let cameraPassCount = 0;
+    let cameraOdolCount = 0;
+    function updateCameraCounters(){
+      const connected = ['Top','Side'].filter(slot => {
+        const state = document.getElementById('state'+slot);
+        return state && (state.textContent === 'VIDEO DEMO' || state.textContent === 'STREAM HLS');
+      }).length;
+      document.getElementById('cameraPassCount').textContent = cameraPassCount;
+      document.getElementById('cameraOdolCount').textContent = cameraOdolCount;
+      document.getElementById('cameraSourceCount').textContent = connected + ' / 2 terhubung';
+    }
+    function captureCameraFrame(slot){
+      const video = document.getElementById('video'+slot);
+      if(!video.videoWidth || !video.videoHeight){alert('Belum ada video aktif untuk diambil cuplikannya.');return;}
+      try{
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+        const link = document.createElement('a');
+        link.download = 'tolsmart-'+slot.toLowerCase()+'-snapshot-'+Date.now()+'.jpg';
+        link.href = canvas.toDataURL('image/jpeg',0.92); link.click();
+      }catch(error){
+        alert('Cuplikan tidak dapat disimpan. Periksa izin akses/CORS dari sumber video.');
+      }
+    }
+    function fullscreenCamera(slot){
+      const frame = document.getElementById('video'+slot).parentElement;
+      if(frame.requestFullscreen) frame.requestFullscreen();
+    }
+    function clearCamera(slot){
+      cameraStop(slot);
+      document.getElementById('file'+slot).value = '';
+      document.getElementById('url'+slot).value = '';
+      cameraSetStatus(slot,'Sumber video diputus',false);
+      updateCameraCounters();
+    }
     function cameraSetStatus(slot,label,connected){
       const state=document.getElementById('state'+slot);
       const dot=document.getElementById('dot'+slot);
@@ -442,6 +481,7 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
       dot.classList.toggle('on',!!connected);
       document.getElementById('status'+slot).textContent=connected?'Sumber video berhasil dimuat pada browser.':label;
       document.getElementById('placeholder'+slot).style.display=connected?'none':'flex';
+      if(typeof updateCameraCounters === 'function') updateCameraCounters();
     }
     function cameraStop(slot){
       const video=document.getElementById('video'+slot);
@@ -479,6 +519,7 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
 
     renderSummary();
     renderTable();
+    updateCameraCounters();
   </script>
 </body>
 </html>
