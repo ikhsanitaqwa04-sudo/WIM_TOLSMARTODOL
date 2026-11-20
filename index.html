@@ -6,6 +6,10 @@
   <title>TOLSMART-ODOL (SIMULASI) — Deteksi WIM, Aturan ODOL & Verifikasi Petugas</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/supabase-config.js"></script>
+  <script src="assets/auth-guard.js" defer></script>
+
 
 <style>
 .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:center;background:linear-gradient(115deg,#102747,#0c1b31 70%);border:1px solid #294361;border-radius:18px;overflow:hidden;padding:24px;margin-bottom:22px}.hero h2{font-size:26px;line-height:1.2;color:#fff;margin:10px 0}.hero p{color:#b8c9dc;font-size:13px;line-height:1.7}.hero img{width:100%;display:block;border-radius:13px;border:1px solid #47617c}.hero-tag{display:inline-flex;background:#183b5c;border:1px solid #416a8d;color:#9fe5f1;padding:5px 10px;border-radius:30px;font-size:10px;font-weight:800;letter-spacing:1px}.tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.tool-card{background:#111f33;border:1px solid #263d58;border-radius:13px;padding:15px}.tool-card b{display:block;color:#e8f1fa;font-size:12px;margin-bottom:6px}.tool-card p{font-size:11px;line-height:1.55;color:#9eb0c5;margin:0}.section-title{font-size:17px;font-weight:800;color:#f1f6fc;margin:5px 0}.section-note{font-size:11px;color:#91a4ba;margin:0 0 13px}.misclass{border:1px solid #72552b;background:#302615;border-radius:12px;padding:14px;color:#f8d99a;font-size:12px}.extra-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.extra-controls input{background:#101f33;border:1px solid #314760;color:#e6eef7;border-radius:8px;padding:8px 10px;font-size:12px}.extra-controls button{background:#1d5d9c;color:#fff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:700}.data-detail{color:#9fb2c7;font-size:11px;line-height:1.6}.footnote{font-size:10px;color:#8ea1b8;line-height:1.6}@media(max-width:850px){.hero{grid-template-columns:1fr}.tool-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.tool-grid{grid-template-columns:1fr}.hero{padding:16px}.hero h2{font-size:21px}}
@@ -150,6 +154,12 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
 @media(max-width:760px){.camera-grid{grid-template-columns:1fr}.project-grid{grid-template-columns:1fr}}
 
 </style>
+<style>
+.auth-userbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.auth-userbar .role-chip{font-size:10px;padding:5px 9px;border-radius:999px;background:#163d5b;color:#aee4ff;border:1px solid #315c7a;font-weight:800}
+.auth-userbar button{font-size:11px;font-weight:800;padding:8px 12px;border-radius:8px;background:#1d5d9c;color:#fff}
+body.auth-checking{visibility:hidden}
+</style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
   <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
@@ -162,6 +172,11 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
     </div>
     <div class="text-xs bg-slate-800 px-3 py-2 rounded border border-slate-700 text-slate-300">
       Catatan: Hasil sensor bersifat <strong>indikasi awal (simulasi)</strong>, bukan tilang otomatis.
+    </div>
+    <div class="auth-userbar" id="authUserBar" aria-live="polite">
+      <span class="role-chip" id="authRoleLabel">Memeriksa sesi...</span>
+      <span class="text-xs text-slate-300" id="authUserEmail"></span>
+      <button type="button" id="logoutButton">Keluar</button>
     </div>
   </header>
 
