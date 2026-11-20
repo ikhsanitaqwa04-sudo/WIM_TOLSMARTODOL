@@ -94,6 +94,16 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
 .camera-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.camera-actions button{padding:7px 10px;border:1px solid #d8e4ef;border-radius:8px;background:#f5f9fd;color:#36536f;font-size:10px;font-weight:700}.camera-actions button:hover{background:#e8f2fc}.camera-counter{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.counter-tile{background:#fff;border:1px solid #e0e9f2;border-radius:12px;padding:12px}.counter-tile span{display:block;color:#71839a;font-size:10px}.counter-tile b{display:block;color:#183654;font-size:21px;margin-top:3px}.camera-hint{font-size:10px;color:#71839a;line-height:1.6;margin-top:8px}@media(max-width:600px){.camera-counter{grid-template-columns:1fr}}
 
 
+.top-sensor-overlay{position:absolute;inset:0;z-index:5;pointer-events:none;display:none;color:#fff;font-family:Arial,sans-serif}
+.top-sensor-overlay.active{display:block}
+.top-sensor-overlay .lane-zone{position:absolute;left:24%;right:24%;top:12%;bottom:12%;border:2px dashed #39e6b4;background:#14b88b12;clip-path:polygon(25% 0,75% 0,100% 100%,0 100%)}
+.top-sensor-overlay .top-scan{position:absolute;left:14%;right:14%;top:15%;height:2px;background:#ff4141;box-shadow:0 0 9px 3px #ff303088;animation:topScanMove 3.4s linear infinite}
+.top-sensor-overlay .top-scan:after{content:"GARIS PEMINDAIAN";position:absolute;left:4px;top:-17px;background:#a51d28e8;border-radius:3px;padding:2px 5px;font-size:8px;font-weight:800;white-space:nowrap}
+.top-sensor-overlay .top-tag{position:absolute;top:8px;left:8px;background:#0b2339e8;border:1px solid #73c8ff;border-radius:6px;padding:6px 8px;font-size:9px;line-height:1.5}
+.top-sensor-overlay .top-readout{position:absolute;right:8px;top:8px;background:#0b2339e8;border:1px solid #73c8ff;border-radius:6px;padding:6px 8px;font-size:9px;line-height:1.5}
+.top-sensor-overlay .top-readout b{color:#7ee7c0}
+.top-sensor-overlay .top-caption{position:absolute;bottom:9px;left:8px;background:#0b2339df;border-radius:5px;padding:4px 7px;font-size:9px}
+@keyframes topScanMove{0%{top:15%}100%{top:82%}}
 .video-sensor-overlay{position:absolute;inset:0;z-index:5;pointer-events:none;display:none;color:#fff;font-family:Arial,sans-serif}
 .video-sensor-overlay.active{display:block}
 .video-sensor-overlay .scan-beam{position:absolute;top:7%;bottom:13%;left:8%;width:2px;background:#ff3b3b;box-shadow:0 0 8px 3px #ff303088;transition:left .12s linear}
@@ -175,7 +185,7 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
  <div class="camera-grid">
   <article class="camera-card">
    <div class="flex justify-between items-center gap-2 mb-3"><div><div class="text-xs font-extrabold text-sky-700">CAMERA 01</div><h3 class="font-extrabold text-slate-800">Kamera tampak atas (Top View)</h3></div><span class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600"><span class="camera-live-dot" id="dotTop"></span><span id="stateTop">Belum terhubung</span></span></div>
-   <div class="camera-frame"><video id="videoTop" controls muted playsinline></video><div class="camera-placeholder" id="placeholderTop"><span style="font-size:34px">◉</span><b>Feed kamera tampak atas</b><span style="font-size:11px;color:#9fb2c7">Pilih video rekaman atau masukkan URL HLS dari server integrasi.</span></div></div>
+   <div class="camera-frame"><video id="videoTop" controls muted playsinline></video><div class="top-sensor-overlay" id="topSensorOverlay"><div class="lane-zone"></div><div class="top-scan"></div><div class="top-tag">CAM 01 · TOP VIEW<br>ANPR + ZONA DETEKSI</div><div class="top-readout" id="topSensorReadout">KENDARAAN: MENUNGGU<br>ANPR: STANDBY<br>WIM: STANDBY</div><div class="top-caption" id="topSensorCaption">OVERLAY SENSOR SIMULASI · MENGIKUTI VIDEO</div></div><div class="camera-placeholder" id="placeholderTop"><span style="font-size:34px">◉</span><b>Feed kamera tampak atas</b><span style="font-size:11px;color:#9fb2c7">Pilih video rekaman atau masukkan URL HLS dari server integrasi.</span></div></div>
    <div class="camera-controls"><input id="fileTop" type="file" accept="video/*" aria-label="Pilih video kamera tampak atas"/><input id="urlTop" type="text" placeholder="URL stream HLS (opsional)"/><button type="button" onclick="connectCamera('Top')">Hubungkan</button></div>
    <div class="camera-status" id="statusTop">Mode demo: belum ada sumber video. Kamera fisik belum terhubung.</div>
    <div class="camera-actions"><button type="button" onclick="captureCameraFrame('Top')">Simpan cuplikan</button><button type="button" onclick="fullscreenCamera('Top')">Perbesar video</button><button type="button" onclick="clearCamera('Top')">Putuskan sumber</button></div>
@@ -535,6 +545,26 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
       cameraSetStatus(slot,'Sumber video diputus',false);
       updateCameraCounters();
     }
+    function updateTopSensorOverlay(){
+      const video=document.getElementById('videoTop');
+      const overlay=document.getElementById('topSensorOverlay');
+      const readout=document.getElementById('topSensorReadout');
+      const caption=document.getElementById('topSensorCaption');
+      const hasVideo=!!video.src && Number.isFinite(video.duration) && video.duration>0;
+      overlay.classList.toggle('active',hasVideo);
+      if(!hasVideo) return;
+      const p=Math.max(0,Math.min(1,video.currentTime/video.duration));
+      const v=simSelected();
+      const detected=p>=0.18 && p<=0.78;
+      const passed=p>0.78;
+      if(detected){
+        readout.innerHTML='KENDARAAN: <b>TERDETEKSI</b><br>ANPR: <b>'+v.ID_Kendaraan+'</b><br>WIM: <b>SIAP BACA</b>';
+        caption.textContent='ZONA DETEKSI AKTIF · DATA KENDARAAN SIMULASI';
+      }else{
+        readout.innerHTML='KENDARAAN: <b>'+(passed?'SELESAI MELINTAS':'MENUNGGU')+'</b><br>ANPR: '+(passed?'TERSIMPAN':'MEMANTAU')+'<br>WIM: '+(passed?'SELESAI':'STANDBY');
+        caption.textContent=passed?'KENDARAAN MELEWATI ZONA · SIMULASI':'MENUNGGU KENDARAAN MEMASUKI ZONA';
+      }
+    }
     function updateVideoSensorOverlay(slot){
       if(slot!=='Side') return;
       const video=document.getElementById('videoSide');
@@ -611,6 +641,11 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
         cameraSetStatus(slot,'Browser tidak mendukung HLS',false);
       }
     }
+    const topVideo=document.getElementById('videoTop');
+    ['timeupdate','play','pause','seeked','loadedmetadata'].forEach(evt=>{
+      topVideo.addEventListener(evt,updateTopSensorOverlay);
+    });
+    topVideo.addEventListener('ended',updateTopSensorOverlay);
     const sideVideo=document.getElementById('videoSide');
     ['timeupdate','play','pause','seeked','loadedmetadata'].forEach(evt=>{
       sideVideo.addEventListener(evt,()=>updateVideoSensorOverlay('Side'));
