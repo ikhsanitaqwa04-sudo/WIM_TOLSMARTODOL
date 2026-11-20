@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TOLSMART-ODOL (SIMULASI) — Deteksi WIM, Aturan ODOL & Verifikasi Petugas</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 
 <style>
 .hero{display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:center;background:linear-gradient(115deg,#102747,#0c1b31 70%);border:1px solid #294361;border-radius:18px;overflow:hidden;padding:24px;margin-bottom:22px}.hero h2{font-size:26px;line-height:1.2;color:#fff;margin:10px 0}.hero p{color:#b8c9dc;font-size:13px;line-height:1.7}.hero img{width:100%;display:block;border-radius:13px;border:1px solid #47617c}.hero-tag{display:inline-flex;background:#183b5c;border:1px solid #416a8d;color:#9fe5f1;padding:5px 10px;border-radius:30px;font-size:10px;font-weight:800;letter-spacing:1px}.tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.tool-card{background:#111f33;border:1px solid #263d58;border-radius:13px;padding:15px}.tool-card b{display:block;color:#e8f1fa;font-size:12px;margin-bottom:6px}.tool-card p{font-size:11px;line-height:1.55;color:#9eb0c5;margin:0}.section-title{font-size:17px;font-weight:800;color:#f1f6fc;margin:5px 0}.section-note{font-size:11px;color:#91a4ba;margin:0 0 13px}.misclass{border:1px solid #72552b;background:#302615;border-radius:12px;padding:14px;color:#f8d99a;font-size:12px}.extra-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.extra-controls input{background:#101f33;border:1px solid #314760;color:#e6eef7;border-radius:8px;padding:8px 10px;font-size:12px}.extra-controls button{background:#1d5d9c;color:#fff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:700}.data-detail{color:#9fb2c7;font-size:11px;line-height:1.6}.footnote{font-size:10px;color:#8ea1b8;line-height:1.6}@media(max-width:850px){.hero{grid-template-columns:1fr}.tool-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.tool-grid{grid-template-columns:1fr}.hero{padding:16px}.hero h2{font-size:21px}}
@@ -78,6 +79,30 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
 .sim-panel{box-shadow:0 10px 28px #18335412}
 @media(max-width:700px){.site-nav{top:68px;padding:9px 14px;align-items:flex-start;flex-direction:column}.site-nav nav{gap:2px}.site-nav a{padding:7px 8px}.hero{padding:20px!important}}
 
+
+/* Dual CCTV panels and project-review sections */
+.camera-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.camera-card{background:#fff;border:1px solid #dce7f2;border-radius:16px;padding:15px;box-shadow:0 7px 22px #2445680a;min-width:0}
+.camera-frame{position:relative;background:#101c2a;border-radius:12px;overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
+.camera-frame video{width:100%;height:100%;object-fit:contain;background:#101c2a}
+.camera-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#c9d9e8;text-align:center;padding:16px;pointer-events:none}
+.camera-controls{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.camera-controls input[type=file]{max-width:100%;font-size:11px;color:#61758c}
+.camera-controls input[type=text]{flex:1;min-width:180px;padding:8px;border:1px solid #d9e4ef;border-radius:8px;font-size:11px;color:#203954;background:#f8fbff}
+.camera-controls button{padding:8px 11px;background:#1769aa;color:#fff;border-radius:8px;font-size:11px;font-weight:700}
+.camera-status{font-size:10px;color:#6a7f96;margin-top:7px}
+.camera-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#94a3b8;margin-right:5px}
+.camera-live-dot.on{background:#16a36a;box-shadow:0 0 0 3px #16a36a20}
+.project-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.project-card{background:#fff;border:1px solid #e0e9f2;border-radius:13px;padding:14px}
+.project-card h3{font-size:13px;font-weight:800;color:#1d3c5b;margin-bottom:6px}
+.project-card p,.project-card li{font-size:11px;line-height:1.6;color:#657b92}
+.project-card ul{padding-left:16px;list-style:disc}
+.project-table{width:100%;border-collapse:collapse;font-size:11px}
+.project-table th,.project-table td{padding:9px;text-align:left;border-bottom:1px solid #e5edf5;vertical-align:top}
+.project-table th{color:#526b85;background:#f3f7fb}
+@media(max-width:760px){.camera-grid{grid-template-columns:1fr}.project-grid{grid-template-columns:1fr}}
+
 </style>
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
@@ -94,7 +119,7 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
     </div>
   </header>
 
-  <div class="site-nav"><div class="nav-brand">TOLSMART <span style="color:#2685c7">•</span> ODOL</div><nav aria-label="Navigasi utama"><a href="#beranda">Beranda</a><a href="#dashboard">Dashboard</a><a href="#area-wim">Area Sensor</a><a href="#simulator">Simulasi WIM</a><a href="#data">Data Kendaraan</a><a href="#verifikasi">Verifikasi</a></nav><span class="nav-status">● PROTOTIPE SIMULASI</span></div>
+  <div class="site-nav"><div class="nav-brand">TOLSMART <span style="color:#2685c7">•</span> ODOL</div><nav aria-label="Navigasi utama"><a href="#beranda">Beranda</a><a href="#dashboard">Dashboard</a><a href="#kamera">Kamera CCTV</a><a href="#area-wim">Area Sensor</a><a href="#konsep">Konsep PKL</a><a href="#simulator">Simulasi WIM</a><a href="#data">Data Kendaraan</a><a href="#verifikasi">Verifikasi</a></nav><span class="nav-status">● PROTOTIPE SIMULASI</span></div>
   <main class="max-w-7xl mx-auto p-6 space-y-6">
 <section class="hero" id="beranda">
  <div><span class="hero-tag">PROTOTIPE SISTEM TRANSPORTASI CERDAS</span><h2>Deteksi kendaraan ODOL melalui teknologi WIM dan sensor dimensi</h2><p>Kendaraan melintas pada area sensor. Sistem membaca berat secara dinamis, kamera ANPR mengenali identitas kendaraan, dan sensor dimensi memeriksa profil panjang, lebar, serta tinggi. Hasilnya dikirim ke dashboard untuk ditinjau petugas.</p><div class="flex flex-wrap gap-2 mt-4"><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● WIM aktif (simulasi)</span><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● ANPR & CCTV</span><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● Sensor dimensi</span></div></div>
@@ -108,8 +133,28 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
 </div></section>
 
 
-<section id="area-wim" class="space-y-4">
- <div><h2 class="section-title">Visualisasi area pemeriksaan WIM</h2><p class="section-note">Rekayasa tata letak peralatan dari dua sudut pandang: tampak atas dan tampak samping. Ilustrasi ini merupakan konsep penempatan alat, bukan gambar instalasi aktual.</p></div>
+
+<section id="kamera" class="space-y-4">
+ <div><h2 class="section-title">Pemantauan kamera dua sudut pandang</h2><p class="section-note">Dua kanal video disiapkan untuk integrasi kamera di lokasi tol: kamera tampak atas dan kamera tampak samping. Untuk demonstrasi awal, video rekaman dapat dipilih dari komputer. Siaran CCTV langsung memerlukan izin pengelola dan server penghubung.</p></div>
+ <div class="camera-grid">
+  <article class="camera-card">
+   <div class="flex justify-between items-center gap-2 mb-3"><div><div class="text-xs font-extrabold text-sky-700">CAMERA 01</div><h3 class="font-extrabold text-slate-800">Kamera tampak atas (Top View)</h3></div><span class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600"><span class="camera-live-dot" id="dotTop"></span><span id="stateTop">Belum terhubung</span></span></div>
+   <div class="camera-frame"><video id="videoTop" controls muted playsinline></video><div class="camera-placeholder" id="placeholderTop"><span style="font-size:34px">◉</span><b>Feed kamera tampak atas</b><span style="font-size:11px;color:#9fb2c7">Pilih video rekaman atau masukkan URL HLS dari server integrasi.</span></div></div>
+   <div class="camera-controls"><input id="fileTop" type="file" accept="video/*" aria-label="Pilih video kamera tampak atas"/><input id="urlTop" type="text" placeholder="URL stream HLS (opsional)"/><button type="button" onclick="connectCamera('Top')">Hubungkan</button></div>
+   <div class="camera-status" id="statusTop">Mode demo: belum ada sumber video. Kamera fisik belum terhubung.</div>
+  </article>
+  <article class="camera-card">
+   <div class="flex justify-between items-center gap-2 mb-3"><div><div class="text-xs font-extrabold text-sky-700">CAMERA 02</div><h3 class="font-extrabold text-slate-800">Kamera tampak samping (Side View)</h3></div><span class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600"><span class="camera-live-dot" id="dotSide"></span><span id="stateSide">Belum terhubung</span></span></div>
+   <div class="camera-frame"><video id="videoSide" controls muted playsinline></video><div class="camera-placeholder" id="placeholderSide"><span style="font-size:34px">◉</span><b>Feed kamera tampak samping</b><span style="font-size:11px;color:#9fb2c7">Pilih video rekaman atau masukkan URL HLS dari server integrasi.</span></div></div>
+   <div class="camera-controls"><input id="fileSide" type="file" accept="video/*" aria-label="Pilih video kamera tampak samping"/><input id="urlSide" type="text" placeholder="URL stream HLS (opsional)"/><button type="button" onclick="connectCamera('Side')">Hubungkan</button></div>
+   <div class="camera-status" id="statusSide">Mode demo: belum ada sumber video. Kamera fisik belum terhubung.</div>
+  </article>
+ </div>
+ <div class="rounded-xl border border-sky-100 bg-sky-50 p-3 text-xs text-sky-900 leading-relaxed"><b>Catatan integrasi:</b> kamera CCTV umumnya mengirim RTSP. Browser tidak memutar RTSP secara langsung. Pengelola/Tim IT perlu menyediakan gateway yang mengubah stream menjadi HLS atau WebRTC. URL stream harus berasal dari sistem resmi; jangan memasukkan username, password, atau token kamera ke halaman website.</div>
+</section>
+
+<section id="area-wim" class="space-y-4"><div class="rounded-lg bg-sky-50 border border-sky-100 p-3 text-xs text-sky-900">Skema di bawah ini tetap dipertahankan sebagai gambar rancangan posisi perangkat. Saat video tersedia, tampilan kamera aktual muncul pada panel pemantauan di atas.</div>
+ <div><h2 class="section-title">Visualisasi area pemeriksaan WIM</h2><p class="section-note">Skema teknis konseptual penempatan perangkat dari dua sudut pandang. Tampilan kamera aktual berada pada panel pemantauan di atas.</p></div>
  <div class="grid lg:grid-cols-2 gap-4">
   <article class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
    <div class="flex items-center justify-between gap-2 mb-3"><div><div class="text-xs font-bold text-sky-700">VIEW 01</div><h3 class="font-extrabold text-slate-800">Tampak atas · Area lajur WIM</h3></div><span class="text-xs rounded-full bg-sky-50 text-sky-700 px-3 py-1">TOP VIEW</span></div>
@@ -177,6 +222,22 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
  <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-700"><span class="text-xs text-slate-300" id="simStageText">Status: kendaraan siap memasuki area pemeriksaan.</span><span class="sim-stage-status" id="simProgress">MENUNGGU PERINTAH</span></div>
  <div class="sim-result" id="simResult"><div class="sim-metric"><small>Berat WIM</small><b>—</b></div><div class="sim-metric"><small>JBI</small><b>—</b></div><div class="sim-metric"><small>Dimensi P × L × T</small><b>—</b></div><div class="sim-metric"><small>Hasil indikasi</small><b>Belum dipindai</b></div></div>
  <div class="px-4 pb-4 text-xs text-slate-400">Urutan proses: kamera ANPR membaca identitas → sensor dimensi memindai profil → plat WIM membaca berat dinamis → sistem mengirim indikasi ke petugas. Animasi ini merupakan visualisasi konseptual, bukan data sensor langsung.</div>
+</section>
+
+
+<section id="konsep" class="space-y-4">
+ <div><h2 class="section-title">Ruang lingkup dan rencana pelaksanaan PKL</h2><p class="section-note">Bagian ini mempertahankan fokus revisi dosen: WIM dan alur verifikasi kendaraan terindikasi ODOL, bukan sistem pembayaran otomatis atau wireless charging.</p></div>
+ <div class="project-grid">
+  <article class="project-card"><h3>01 · Fokus dan lokasi pilot</h3><p><b>Fokus:</b> deteksi awal kendaraan terindikasi Over Dimension Over Load menggunakan WIM dan sensor dimensi, dilanjutkan verifikasi petugas.</p><p class="mt-2"><b>Lokasi pilot:</b> segmen jalan tol yang akan ditetapkan bersama pengelola tol saat PKL. KM 420+400 pada dataset hanya lokasi simulasi, bukan penetapan lokasi aktual.</p></article>
+  <article class="project-card"><h3>02 · Aktor yang terlibat</h3><ul><li>Pengelola/operator jalan tol: akses lokasi, kamera, dan data operasional.</li><li>Tim IT/teknis: jaringan, server, dan integrasi kamera.</li><li>Petugas berwenang: pemeriksaan dokumen dan fisik serta keputusan verifikasi.</li><li>Tim pengembang/proyek: dashboard, pencatatan, dan evaluasi.</li></ul></article>
+  <article class="project-card"><h3>03 · Data yang diperlukan</h3><ul><li>Video kamera atas dan samping serta waktu perekaman.</li><li>Data WIM, kecepatan, klasifikasi sumbu, dan JBI acuan.</li><li>Hasil ukur panjang, lebar, dan tinggi.</li><li>Hasil pemeriksaan petugas untuk validasi.</li><li>Data kondisi perangkat dan kalibrasi.</li></ul><p class="mt-2"><b>Status prototipe:</b> 30 baris dataset yang tersedia masih data simulasi.</p></article>
+ </div>
+ <div class="grid lg:grid-cols-2 gap-3">
+  <article class="project-card"><h3>04 · Komponen estimasi biaya awal</h3><table class="project-table"><thead><tr><th>Komponen</th><th>Dasar perhitungan</th></tr></thead><tbody><tr><td>2 unit kamera dan dudukan</td><td>Spesifikasi, resolusi, kondisi outdoor, dan pemasangan.</td></tr><tr><td>Perangkat WIM dan sensor dimensi</td><td>Jenis sensor, jumlah lajur, kalibrasi, dan integrasi.</td></tr><tr><td>Server, jaringan, dan penyimpanan</td><td>Kebutuhan bandwidth, retensi video, dan keamanan.</td></tr><tr><td>Pengembangan integrasi dan pemeliharaan</td><td>Jasa integrasi, pengujian, pelatihan, dan pemeliharaan.</td></tr></tbody></table><p class="mt-2"><b>Nilai rupiah:</b> diisi setelah survei lokasi dan permintaan penawaran vendor/pengelola. Tidak dicantumkan angka rekaan pada prototipe.</p></article>
+  <article class="project-card"><h3>05 · Risiko dan mitigasi</h3><ul><li><b>False positive/negative WIM:</b> kalibrasi, pengaturan ambang, dan pemeriksaan ulang.</li><li><b>ANPR gagal membaca:</b> simpan cuplikan CCTV dan lakukan pencocokan manual.</li><li><b>Dimensi salah terbaca:</b> periksa terpal, antena, dan objek nonstruktural.</li><li><b>Gangguan jaringan/kamera:</b> pencatatan status perangkat dan penyimpanan lokal.</li><li><b>Privasi dan keamanan:</b> izin akses, pembatasan pengguna, dan pengamanan kredensial.</li></ul></article>
+ </div>
+ <article class="project-card"><h3>06 · Indikator keberhasilan evaluasi</h3><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-2"><div class="rounded-lg bg-slate-50 p-3"><b class="text-slate-800 text-xs">Keberhasilan pembacaan ANPR</b><p>Persentase pelat terbaca benar dari sampel uji.</p></div><div class="rounded-lg bg-slate-50 p-3"><b class="text-slate-800 text-xs">Akurasi indikasi WIM</b><p>Kesesuaian indikasi dengan hasil pemeriksaan pembanding.</p></div><div class="rounded-lg bg-slate-50 p-3"><b class="text-slate-800 text-xs">Akurasi dimensi</b><p>Selisih hasil sensor terhadap pengukuran verifikasi.</p></div><div class="rounded-lg bg-slate-50 p-3"><b class="text-slate-800 text-xs">Waktu proses</b><p>Waktu dari kendaraan terdeteksi sampai data tampil di dashboard.</p></div></div></article>
+ <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 leading-relaxed"><b>Prinsip verifikasi:</b> hasil WIM dan sensor dimensi hanya menjadi indikasi awal. Sistem tidak menetapkan pelanggaran atau denda secara otomatis. Penetapan akhir dilakukan setelah pemeriksaan oleh petugas berwenang. Estimasi kerugian jalan dan besaran pembayaran/denda ditampilkan sebagai dua komponen terpisah dan harus menggunakan dasar perhitungan serta ketentuan yang telah diverifikasi.</div>
 </section>
 
     <!-- Summary Cards -->
@@ -366,6 +427,51 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
     document.getElementById('simStart').addEventListener('click',startSim);
     document.getElementById('simReset').addEventListener('click',resetSim);
     simSelect.addEventListener('change',resetSim);
+
+
+    // Dual camera preview: local video files for demonstration and HLS URL for approved server streams.
+    const cameraPlayers = {};
+    function cameraSetStatus(slot,label,connected){
+      const state=document.getElementById('state'+slot);
+      const dot=document.getElementById('dot'+slot);
+      state.textContent=label;
+      dot.classList.toggle('on',!!connected);
+      document.getElementById('status'+slot).textContent=connected?'Sumber video berhasil dimuat pada browser.':label;
+      document.getElementById('placeholder'+slot).style.display=connected?'none':'flex';
+    }
+    function cameraStop(slot){
+      const video=document.getElementById('video'+slot);
+      if(cameraPlayers[slot]){try{cameraPlayers[slot].destroy();}catch(e){} cameraPlayers[slot]=null;}
+      video.pause();video.removeAttribute('src');video.load();
+      if(video.dataset.objectUrl){URL.revokeObjectURL(video.dataset.objectUrl);delete video.dataset.objectUrl;}
+    }
+    function connectCamera(slot){
+      const file=document.getElementById('file'+slot).files[0];
+      const url=document.getElementById('url'+slot).value.trim();
+      const video=document.getElementById('video'+slot);
+      cameraStop(slot);
+      if(file){
+        const objectUrl=URL.createObjectURL(file);video.dataset.objectUrl=objectUrl;video.src=objectUrl;
+        video.onloadeddata=()=>cameraSetStatus(slot,'VIDEO DEMO',true);
+        video.onerror=()=>cameraSetStatus(slot,'Video tidak dapat diputar',false);
+        video.load();return;
+      }
+      if(!url){cameraSetStatus(slot,'Belum ada video/URL stream',false);return;}
+      if(window.Hls && Hls.isSupported()){
+        const hls=new Hls();cameraPlayers[slot]=hls;
+        hls.loadSource(url);hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED,()=>cameraSetStatus(slot,'STREAM HLS',true));
+        hls.on(Hls.Events.ERROR,(event,data)=>{if(data.fatal)cameraSetStatus(slot,'Stream gagal dimuat / akses ditolak',false);});
+      }else if(video.canPlayType('application/vnd.apple.mpegurl')){
+        video.src=url;video.onloadedmetadata=()=>cameraSetStatus(slot,'STREAM HLS',true);
+        video.onerror=()=>cameraSetStatus(slot,'Stream gagal dimuat / akses ditolak',false);
+      }else{
+        cameraSetStatus(slot,'Browser tidak mendukung HLS',false);
+      }
+    }
+    ['Top','Side'].forEach(slot=>{
+      document.getElementById('file'+slot).addEventListener('change',()=>{if(document.getElementById('file'+slot).files[0])connectCamera(slot);});
+    });
 
     renderSummary();
     renderTable();
