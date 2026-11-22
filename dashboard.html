@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TOLSMART-ODOL (SIMULASI) — Deteksi WIM, Aturan ODOL & Verifikasi Petugas</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+
+
+<style>
+.hero{display:grid;grid-template-columns:1.05fr .95fr;gap:22px;align-items:center;background:linear-gradient(115deg,#102747,#0c1b31 70%);border:1px solid #294361;border-radius:18px;overflow:hidden;padding:24px;margin-bottom:22px}.hero h2{font-size:26px;line-height:1.2;color:#fff;margin:10px 0}.hero p{color:#b8c9dc;font-size:13px;line-height:1.7}.hero img{width:100%;display:block;border-radius:13px;border:1px solid #47617c}.hero-tag{display:inline-flex;background:#183b5c;border:1px solid #416a8d;color:#9fe5f1;padding:5px 10px;border-radius:30px;font-size:10px;font-weight:800;letter-spacing:1px}.tool-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.tool-card{background:#111f33;border:1px solid #263d58;border-radius:13px;padding:15px}.tool-card b{display:block;color:#e8f1fa;font-size:12px;margin-bottom:6px}.tool-card p{font-size:11px;line-height:1.55;color:#9eb0c5;margin:0}.section-title{font-size:17px;font-weight:800;color:#f1f6fc;margin:5px 0}.section-note{font-size:11px;color:#91a4ba;margin:0 0 13px}.misclass{border:1px solid #72552b;background:#302615;border-radius:12px;padding:14px;color:#f8d99a;font-size:12px}.extra-controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.extra-controls input{background:#101f33;border:1px solid #314760;color:#e6eef7;border-radius:8px;padding:8px 10px;font-size:12px}.extra-controls button{background:#1d5d9c;color:#fff;border-radius:8px;padding:8px 12px;font-size:11px;font-weight:700}.data-detail{color:#9fb2c7;font-size:11px;line-height:1.6}.footnote{font-size:10px;color:#8ea1b8;line-height:1.6}@media(max-width:850px){.hero{grid-template-columns:1fr}.tool-grid{grid-template-columns:repeat(2,1fr)}}@media(max-width:520px){.tool-grid{grid-template-columns:1fr}.hero{padding:16px}.hero h2{font-size:21px}}
+
+/* Interactive WIM lane simulation */
+.sim-panel{background:linear-gradient(135deg,#0d1b2d,#132b45);border:1px solid #294663;border-radius:16px;overflow:hidden}
+.sim-head{padding:19px 21px;border-bottom:1px solid #29415c;display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}
+.sim-stage{position:relative;height:260px;overflow:hidden;background:linear-gradient(#142f4c 0 57%,#26384b 57% 100%)}
+.sim-skyline{position:absolute;inset:0 0 43% 0;background:radial-gradient(circle at 80% 22%,#52718b33 0 75px,transparent 76px),linear-gradient(160deg,#173858,#0b1b30)}
+.sim-gantry{position:absolute;z-index:2;top:22px;left:16%;width:68%;height:145px;border:9px solid #9aafc2;border-bottom:0;border-radius:4px 4px 0 0}
+.sim-gantry:before{content:"";position:absolute;top:-9px;left:-12px;right:-12px;height:12px;background:#d1deea;border-radius:4px}
+.sim-sensor{position:absolute;top:0;width:35px;height:26px;background:#d8e5ef;border:3px solid #6f879d;border-radius:5px}
+.sim-sensor:after{content:"";position:absolute;left:12px;top:21px;height:100px;border-left:2px dashed #62d8f4;opacity:.85}
+.sim-sensor.a{left:16%}.sim-sensor.b{left:49%}.sim-sensor.c{right:16%}
+.sim-lane{position:absolute;bottom:0;height:43%;left:0;right:0;background:repeating-linear-gradient(90deg,transparent 0 62px,#dce5ee 63px 91px,transparent 92px 140px) center 80%/100% 4px no-repeat,#35465a}
+.sim-lane:before{content:"";position:absolute;left:0;right:0;top:13px;border-top:2px solid #91a4b7;opacity:.4}
+.sim-truck{position:absolute;z-index:3;bottom:35px;left:4%;width:190px;height:92px;transform:translateX(0);transition:left 3.8s cubic-bezier(.45,.05,.55,.95)}
+.sim-truck.moving{left:calc(100% - 205px)}
+.sim-truck svg{width:100%;height:100%;overflow:visible}
+.sim-beam{position:absolute;z-index:2;top:55px;left:50%;height:135px;border-left:3px solid #55e5ff;box-shadow:0 0 13px #55e5ff;opacity:0;transition:opacity .2s}
+.sim-beam.active{opacity:1;animation:beamPulse .65s infinite alternate}
+@keyframes beamPulse{from{filter:brightness(.7)}to{filter:brightness(1.8)}}
+.sim-stage-label{position:absolute;z-index:4;top:12px;left:12px;background:#0b1a2dcc;color:#d7f4ff;border:1px solid #42617d;padding:5px 9px;border-radius:7px;font-size:10px}
+.sim-control{background:#101f33;border:1px solid #344b65;color:#e8f2fc;border-radius:8px;padding:9px 11px;font-size:12px}
+.sim-btn{background:#1c66ad;color:#fff;padding:9px 14px;border-radius:8px;font-size:12px;font-weight:700}
+.sim-btn.alt{background:#263c55}
+.sim-result{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px;padding:15px}
+.sim-metric{background:#0e1c2e;border:1px solid #263e58;border-radius:10px;padding:11px}
+.sim-metric small{display:block;color:#91a6bd;font-size:10px}.sim-metric b{display:block;color:#f0f6fc;font-size:17px;margin-top:4px}
+.sim-stage-status{color:#8fe7f6;font-size:11px;font-weight:700}
+@media(max-width:650px){.sim-stage{height:220px}.sim-truck{width:150px;height:76px;bottom:28px}.sim-truck.moving{left:calc(100% - 160px)}.sim-result{grid-template-columns:repeat(2,minmax(0,1fr))}.sim-gantry{height:120px}}
+
+/* SafeRoad-inspired light dashboard redesign for TOLSMART-ODOL */
+:root{color-scheme:light}
+body{background:#f3f7fd!important;color:#182b45!important}
+header.bg-slate-900{background:#fff!important;border-color:#e3eaf3!important;box-shadow:0 5px 22px #183b5c0b;position:sticky;top:0;z-index:30}
+header h1{color:#142943!important;font-size:17px!important}
+header p{color:#71839a!important}
+header .bg-slate-800{background:#f0f5fb!important;color:#526780!important;border-color:#dce6f1!important}
+main{max-width:1200px!important}
+.hero{background:linear-gradient(115deg,#f7faff,#eaf2ff)!important;border:1px solid #e1eaf6!important;box-shadow:0 12px 34px #294d7410;padding:30px!important}
+.hero h2{color:#173354!important;font-size:clamp(25px,3vw,36px)!important;max-width:650px}
+.hero p{color:#647993!important;font-size:14px!important;max-width:650px}
+.hero-tag{background:#e2f2ff!important;border-color:#c5e4fa!important;color:#17649a!important}
+.hero img{border-color:#d9e5f2!important;box-shadow:0 12px 26px #17335415}
+.tool-card,.bg-slate-900{background:#fff!important;border-color:#e2eaf3!important;box-shadow:0 5px 18px #24456808}
+.tool-card b,.section-title{color:#183654!important}
+.tool-card p,.section-note,.data-detail{color:#71839a!important}
+.section-title{font-size:19px!important}
+.section-note{font-size:12px!important}
+#summaryCards>div{background:#fff!important;border-color:#e2eaf3!important;box-shadow:0 6px 18px #2445680a}
+#summaryCards .text-slate-400{color:#71839a!important}
+#summaryCards .text-2xl{color:#183654!important}
+#filterButtons button{border:1px solid #e0e8f2}
+#vehicleSearch,.extra-controls input{background:#f8fbff!important;color:#203954!important;border-color:#dce6f1!important}
+.extra-controls button{background:#1769aa!important}
+section.bg-slate-900 table{color:#29415b}
+section.bg-slate-900 thead{background:#edf3fa!important;color:#5b7089!important}
+section.bg-slate-900 tbody{color:#29415b}
+section.bg-slate-900 th,section.bg-slate-900 td{border-color:#e8eef5!important}
+section.bg-slate-900 .text-slate-400{color:#71839a!important}
+section.bg-slate-900 .text-slate-300{color:#526780!important}
+.misclass{background:#fff8e9!important;border-color:#f2dfb4!important;color:#805b1c!important}
+.footnote{color:#71839a!important}
+.site-nav{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:11px 24px;background:#fff;border-bottom:1px solid #e5edf5;position:sticky;top:78px;z-index:25}
+.site-nav .nav-brand{font-size:12px;font-weight:900;letter-spacing:.08em;color:#1c4269}
+.site-nav nav{display:flex;gap:7px;flex-wrap:wrap}
+.site-nav a{font-size:11px;font-weight:700;color:#60758e;text-decoration:none;padding:8px 11px;border-radius:8px}
+.site-nav a:hover{background:#edf5ff;color:#1769aa}
+.site-nav .nav-status{font-size:10px;color:#18764f;background:#eaf8f1;border:1px solid #d2efdf;padding:6px 9px;border-radius:20px;white-space:nowrap}
+.sim-panel{box-shadow:0 10px 28px #18335412}
+@media(max-width:700px){.site-nav{top:68px;padding:9px 14px;align-items:flex-start;flex-direction:column}.site-nav nav{gap:2px}.site-nav a{padding:7px 8px}.hero{padding:20px!important}}
+
+
+/* Dual CCTV panels and project-review sections */
+.camera-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.camera-card{background:#fff;border:1px solid #dce7f2;border-radius:16px;padding:15px;box-shadow:0 7px 22px #2445680a;min-width:0}
+.camera-frame{position:relative;background:#101c2a;border-radius:12px;overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
+.camera-frame video{width:100%;height:100%;object-fit:contain;background:#101c2a}
+.camera-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#c9d9e8;text-align:center;padding:16px;pointer-events:none}
+.camera-controls{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
+.camera-controls input[type=file]{max-width:100%;font-size:11px;color:#61758c}
+.camera-controls input[type=text]{flex:1;min-width:180px;padding:8px;border:1px solid #d9e4ef;border-radius:8px;font-size:11px;color:#203954;background:#f8fbff}
+.camera-controls button{padding:8px 11px;background:#1769aa;color:#fff;border-radius:8px;font-size:11px;font-weight:700}
+.camera-status{font-size:10px;color:#6a7f96;margin-top:7px}
+.camera-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}.camera-actions button{padding:7px 10px;border:1px solid #d8e4ef;border-radius:8px;background:#f5f9fd;color:#36536f;font-size:10px;font-weight:700}.camera-actions button:hover{background:#e8f2fc}.camera-counter{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}.counter-tile{background:#fff;border:1px solid #e0e9f2;border-radius:12px;padding:12px}.counter-tile span{display:block;color:#71839a;font-size:10px}.counter-tile b{display:block;color:#183654;font-size:21px;margin-top:3px}.camera-hint{font-size:10px;color:#71839a;line-height:1.6;margin-top:8px}@media(max-width:600px){.camera-counter{grid-template-columns:1fr}}
+
+
+.top-sensor-overlay{position:absolute;inset:0;z-index:5;pointer-events:none;display:none;color:#fff;font-family:Arial,sans-serif}
+.top-sensor-overlay.active{display:block}
+.top-sensor-overlay .lane-zone{position:absolute;left:24%;right:24%;top:12%;bottom:12%;border:2px dashed #39e6b4;background:#14b88b12;clip-path:polygon(25% 0,75% 0,100% 100%,0 100%)}
+.top-sensor-overlay .top-scan{position:absolute;left:14%;right:14%;top:15%;height:2px;background:#ff4141;box-shadow:0 0 9px 3px #ff303088;animation:topScanMove 3.4s linear infinite}
+.top-sensor-overlay .top-scan:after{content:"GARIS PEMINDAIAN";position:absolute;left:4px;top:-17px;background:#a51d28e8;border-radius:3px;padding:2px 5px;font-size:8px;font-weight:800;white-space:nowrap}
+.top-sensor-overlay .top-tag{position:absolute;top:8px;left:8px;background:#0b2339e8;border:1px solid #73c8ff;border-radius:6px;padding:6px 8px;font-size:9px;line-height:1.5}
+.top-sensor-overlay .top-readout{position:absolute;right:8px;top:8px;background:#0b2339e8;border:1px solid #73c8ff;border-radius:6px;padding:6px 8px;font-size:9px;line-height:1.5}
+.top-sensor-overlay .top-readout b{color:#7ee7c0}
+.top-sensor-overlay .top-caption{position:absolute;bottom:9px;left:8px;background:#0b2339df;border-radius:5px;padding:4px 7px;font-size:9px}
+@keyframes topScanMove{0%{top:15%}100%{top:82%}}
+.video-sensor-overlay{position:absolute;inset:0;z-index:5;pointer-events:none;display:none;color:#fff;font-family:Arial,sans-serif}
+.video-sensor-overlay.active{display:block}
+.video-sensor-overlay .scan-beam{position:absolute;top:7%;bottom:13%;left:8%;width:2px;background:#ff3b3b;box-shadow:0 0 8px 3px #ff303088;transition:left .12s linear}
+.video-sensor-overlay .scan-beam:before{content:"LASER SCAN";position:absolute;top:-18px;left:5px;white-space:nowrap;background:#a51d28e8;border-radius:3px;padding:3px 5px;font-size:9px;font-weight:800}
+.video-sensor-overlay .scale-zone{position:absolute;left:8%;right:8%;bottom:7%;height:6px;border:1px solid #ffd166;background:#ffd16635;box-shadow:0 0 9px #ffc14b88}
+.video-sensor-overlay .readout{position:absolute;top:8px;right:8px;background:#0b2339e8;border:1px solid #73c8ff;border-radius:7px;padding:7px 9px;font-size:10px;line-height:1.55;min-width:130px}
+.video-sensor-overlay .readout b{color:#7ee7c0}
+.video-sensor-overlay .scan-caption{position:absolute;left:8px;bottom:17px;background:#0b2339d9;border-radius:5px;padding:4px 7px;font-size:9px}
+.video-sensor-overlay .scan-caption.done{background:#075b45e8}
+
+.side-sim{position:absolute;inset:0;overflow:hidden;background:linear-gradient(#dff4fb 0 48%,#8797a3 48% 53%,#293747 53% 100%);color:#fff}
+.side-sim .sim-skyline{position:absolute;left:0;right:0;top:35%;height:18%;background:linear-gradient(90deg,#8aa17f,#b6c4a0 25%,#728e77 55%,#a7b99b);opacity:.8}
+.side-sim .sim-road{position:absolute;left:0;right:0;bottom:0;height:48%;background:repeating-linear-gradient(90deg,transparent 0 70px,#dce4e9 71px 104px,transparent 105px 175px);background-position:center 80%;background-size:100% 3px;background-repeat:no-repeat}
+.side-sim .gantry{position:absolute;top:15%;left:57%;width:5px;height:49%;background:#536a7e;box-shadow:0 0 0 2px #dce8ee}
+.side-sim .gantry:before{content:"";position:absolute;top:0;left:-100px;width:205px;height:8px;background:#536a7e;border-radius:4px}
+.side-sim .sensor-head{position:absolute;top:19%;left:55%;width:12px;height:10px;background:#f59e0b;border:2px solid #fff;border-radius:3px}
+.side-sim .laser{position:absolute;top:24%;left:57.5%;height:34%;border-left:2px dashed #ff4b4b;filter:drop-shadow(0 0 4px #ff4b4b);animation:laserPulse 1s infinite}
+.side-sim .truck{position:absolute;bottom:22%;left:-45%;width:42%;height:40%;animation:truckPass 8s linear infinite}
+.side-sim .truck svg{width:100%;height:100%;overflow:visible}
+.side-sim .truck-label{position:absolute;left:10px;top:-20px;background:#102b43dd;border:1px solid #77b9e6;border-radius:5px;padding:3px 6px;font-size:9px;white-space:nowrap}
+.side-sim .scale-pad{position:absolute;left:48%;bottom:15%;width:20%;height:8px;background:#f59e0b;border:2px solid #fff;box-shadow:0 0 12px #f59e0b88}
+.side-sim .scale-label{position:absolute;left:48%;bottom:5%;font-size:9px;color:#fff;background:#102b43dd;padding:3px 6px;border-radius:4px}
+.side-sim .overlay{position:absolute;top:8px;left:9px;right:9px;display:flex;justify-content:space-between;font-size:9px;color:#173b56;font-weight:800}
+.side-sim .overlay span:last-child{color:#087d55}
+@keyframes truckPass{0%{left:-45%}100%{left:110%}}
+@keyframes laserPulse{0%,100%{opacity:.35}50%{opacity:1}}
+.sensor-readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:9px}
+.sensor-tile{border:1px solid #dce7f0;background:#fff;border-radius:11px;padding:11px}
+.sensor-tile small{display:block;font-size:9px;color:#71839a;font-weight:700;text-transform:uppercase}
+.sensor-tile strong{display:block;font-size:18px;color:#183654;margin-top:3px}
+.sensor-tile em{font-size:9px;color:#8294a7;font-style:normal}
+@media(max-width:700px){.sensor-readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+.camera-live-dot{display:inline-block;width:7px;height:7px;border-radius:50%;background:#94a3b8;margin-right:5px}
+.camera-live-dot.on{background:#16a36a;box-shadow:0 0 0 3px #16a36a20}
+.project-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.project-card{background:#fff;border:1px solid #e0e9f2;border-radius:13px;padding:14px}
+.project-card h3{font-size:13px;font-weight:800;color:#1d3c5b;margin-bottom:6px}
+.project-card p,.project-card li{font-size:11px;line-height:1.6;color:#657b92}
+.project-card ul{padding-left:16px;list-style:disc}
+.project-table{width:100%;border-collapse:collapse;font-size:11px}
+.project-table th,.project-table td{padding:9px;text-align:left;border-bottom:1px solid #e5edf5;vertical-align:top}
+.project-table th{color:#526b85;background:#f3f7fb}
+@media(max-width:760px){.camera-grid{grid-template-columns:1fr}.project-grid{grid-template-columns:1fr}}
+
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
+  <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
+    <div>
+      <div class="flex items-center gap-2">
+        <span class="px-2.5 py-0.5 text-xs font-bold rounded bg-amber-500/20 text-amber-300 border border-amber-400/40">MODE SIMULASI</span>
+        <h1 class="text-lg font-bold text-white">TOLSMART-ODOL — Simulasi WIM, Aturan ODOL & Verifikasi Petugas</h1>
+      </div>
+      <p class="text-xs text-slate-400 mt-1">Iksani Taqwa (2403013) • MTJ 3A • Fokus: Simulasi WIM, Aturan Indikasi ODOL, Uji Salah Klasifikasi & Verifikasi Manusia</p>
+    </div>
+    <div class="text-xs bg-slate-800 px-3 py-2 rounded border border-slate-700 text-slate-300">
+      Catatan: Hasil sensor bersifat <strong>indikasi awal (simulasi)</strong>, bukan tilang otomatis.
+    </div>
+  </header>
+
+  <div class="site-nav"><div class="nav-brand">TOLSMART <span style="color:#2685c7">•</span> ODOL</div><nav aria-label="Navigasi utama"><a href="#beranda">Beranda</a><a href="#dashboard">Dashboard</a><a href="#kamera">Kamera CCTV</a><a href="#area-wim">Area Sensor</a><a href="#konsep">Konsep PKL</a><a href="#simulator">Simulasi WIM</a><a href="#data">Data Kendaraan</a><a href="#verifikasi">Verifikasi</a></nav><span class="nav-status">● PROTOTIPE SIMULASI</span></div>
+  <main class="max-w-7xl mx-auto p-6 space-y-6">
+<section class="hero" id="beranda">
+ <div><span class="hero-tag">PROTOTIPE SISTEM TRANSPORTASI CERDAS</span><h2>Deteksi kendaraan ODOL melalui teknologi WIM dan sensor dimensi</h2><p>Kendaraan melintas pada area sensor. Sistem membaca berat secara dinamis, kamera ANPR mengenali identitas kendaraan, dan sensor dimensi memeriksa profil panjang, lebar, serta tinggi. Hasilnya dikirim ke dashboard untuk ditinjau petugas.</p><div class="flex flex-wrap gap-2 mt-4"><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● WIM aktif (simulasi)</span><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● ANPR & CCTV</span><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● Sensor dimensi</span></div></div>
+ <div><img src="assets/wim-gate.svg" alt="Ilustrasi animasi gerbang WIM, kamera ANPR dan sensor dimensi sedang memeriksa truk"><p class="footnote mt-2">Ilustrasi rekayasa konseptual alat pemeriksaan; bukan dokumentasi instalasi aktual.</p></div>
+</section>
+<section class="mb-6" id="teknologi"><h2 class="section-title">Peralatan yang bekerja pada sistem</h2><p class="section-note">Urutan fungsi peralatan pada area pemeriksaan kendaraan.</p><div class="tool-grid">
+ <article class="tool-card"><b>01 · Sensor WIM</b><p>Plat sensor pada permukaan lajur membaca beban kendaraan saat kendaraan tetap bergerak. Hasil dibandingkan dengan JBI acuan.</p></article>
+ <article class="tool-card"><b>02 · Kamera ANPR / CCTV</b><p>Kamera menangkap citra kendaraan dan pelat nomor untuk pencatatan identitas serta bukti visual.</p></article>
+ <article class="tool-card"><b>03 · Sensor dimensi</b><p>Sensor laser atau pemindai profil memperkirakan panjang, lebar, dan tinggi kendaraan yang melintas.</p></article>
+ <article class="tool-card"><b>04 · Komputer & dashboard</b><p>Data sensor dipadukan, ditandai jika ada indikasi, lalu diteruskan kepada petugas untuk pemeriksaan lanjutan.</p></article>
+</div></section>
+
+
+
+<section id="kamera" class="space-y-4">
+ <div><h2 class="section-title">Pemantauan kamera dua sudut pandang</h2><p class="section-note">Dua kanal video disiapkan untuk integrasi kamera di lokasi tol: kamera tampak atas dan kamera tampak samping. Untuk demonstrasi awal, video rekaman dapat dipilih dari komputer. Siaran CCTV langsung memerlukan izin pengelola dan server penghubung.</p></div>
+ <div class="camera-grid">
+  <article class="camera-card">
+   <div class="flex justify-between items-center gap-2 mb-3"><div><div class="text-xs font-extrabold text-sky-700">CAMERA 01</div><h3 class="font-extrabold text-slate-800">Kamera tampak atas (Top View)</h3></div><span class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600"><span class="camera-live-dot" id="dotTop"></span><span id="stateTop">Belum terhubung</span></span></div>
+   <div class="camera-frame"><video id="videoTop" controls muted playsinline></video><div class="top-sensor-overlay" id="topSensorOverlay"><div class="lane-zone"></div><div class="top-scan"></div><div class="top-tag">CAM 01 · TOP VIEW<br>ANPR + ZONA DETEKSI</div><div class="top-readout" id="topSensorReadout">KENDARAAN: MENUNGGU<br>ANPR: STANDBY<br>WIM: STANDBY</div><div class="top-caption" id="topSensorCaption">OVERLAY SENSOR SIMULASI · MENGIKUTI VIDEO</div></div><div class="camera-placeholder" id="placeholderTop"><span style="font-size:34px">◉</span><b>Feed kamera tampak atas</b><span style="font-size:11px;color:#9fb2c7">Pilih video rekaman atau masukkan URL HLS dari server integrasi.</span></div></div>
+   <div class="camera-controls"><input id="fileTop" type="file" accept="video/*" aria-label="Pilih video kamera tampak atas"/><input id="urlTop" type="text" placeholder="URL stream HLS (opsional)"/><button type="button" onclick="connectCamera('Top')">Hubungkan</button></div>
+   <div class="camera-status" id="statusTop">Mode demo: belum ada sumber video. Kamera fisik belum terhubung.</div>
+   <div class="camera-actions"><button type="button" onclick="captureCameraFrame('Top')">Simpan cuplikan</button><button type="button" onclick="fullscreenCamera('Top')">Perbesar video</button><button type="button" onclick="clearCamera('Top')">Putuskan sumber</button></div>
+  </article>
+  <article class="camera-card">
+   <div class="flex justify-between items-center gap-2 mb-3"><div><div class="text-xs font-extrabold text-sky-700">CAMERA 02</div><h3 class="font-extrabold text-slate-800">Kamera tampak samping (Side View)</h3></div><span class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600"><span class="camera-live-dot" id="dotSide"></span><span id="stateSide">Belum terhubung</span></span></div>
+   <div class="camera-frame"><video id="videoSide" controls muted playsinline></video><div class="video-sensor-overlay" id="videoSensorOverlay"><div class="scan-beam" id="videoScanBeam"></div><div class="scale-zone"></div><div class="readout" id="videoSensorReadout">WIM: MENUNGGU<br>Laser: STANDBY</div><div class="scan-caption" id="videoScanCaption">OVERLAY SIMULASI · MENGIKUTI PEMUTARAN VIDEO</div></div><div class="side-sim" id="sideSimulation">
+    <div class="sim-skyline"></div><div class="sim-road"></div><div class="overlay"><span>CAM 02 · SIDE PROFILE / SIMULATION</span><span>● SIMULASI AKTIF</span></div>
+    <div class="gantry"></div><div class="sensor-head" title="Sensor laser dimensi"></div><div class="laser"></div>
+    <div class="truck"><div class="truck-label">ANPR · DETEKSI DIMENSI</div><svg viewBox="0 0 420 150" role="img" aria-label="Ilustrasi truk tampak samping melintasi sensor dan timbangan"><rect x="20" y="35" width="245" height="85" rx="5" fill="#e9edf1" stroke="#263f55" stroke-width="4"/><path d="M265 70 L320 70 L365 100 L365 120 L265 120Z" fill="#1976b9" stroke="#263f55" stroke-width="4"/><path d="M320 75 L350 75 L365 98 L320 98Z" fill="#9ed8f3" stroke="#263f55" stroke-width="3"/><rect x="35" y="48" width="210" height="9" fill="#9eb0bf"/><rect x="35" y="65" width="210" height="45" fill="#d1dbe3"/><path d="M45 75 H235 M45 91 H235" stroke="#9aabba" stroke-width="2"/><circle cx="85" cy="122" r="18" fill="#182b3c"/><circle cx="85" cy="122" r="8" fill="#aab8c5"/><circle cx="300" cy="122" r="18" fill="#182b3c"/><circle cx="300" cy="122" r="8" fill="#aab8c5"/><circle cx="350" cy="122" r="18" fill="#182b3c"/><circle cx="350" cy="122" r="8" fill="#aab8c5"/></svg></div>
+    <div class="scale-pad"></div><div class="scale-label">PLAT TIMBANG WIM</div>
+  </div><div class="camera-placeholder" id="placeholderSide" style="display:none"></div></div>
+   <div class="camera-controls"><input id="fileSide" type="file" accept="video/*" aria-label="Pilih video kamera tampak samping"/><input id="urlSide" type="text" placeholder="URL stream HLS (opsional)"/><button type="button" onclick="connectCamera('Side')">Hubungkan</button></div>
+   <div class="camera-status" id="statusSide">Mode demo: belum ada sumber video. Kamera fisik belum terhubung.</div>
+   <div class="camera-actions"><button type="button" onclick="captureCameraFrame('Side')">Simpan cuplikan</button><button type="button" onclick="fullscreenCamera('Side')">Perbesar video</button><button type="button" onclick="clearCamera('Side')">Putuskan sumber</button></div>
+  </article>
+ </div>
+<div class="camera-counter"><div class="counter-tile"><span>Kendaraan selesai diproses (simulasi)</span><b id="cameraPassCount">0</b></div><div class="counter-tile"><span>Indikasi ODOL pada simulasi</span><b id="cameraOdolCount">0</b></div><div class="counter-tile"><span>Status sumber kamera</span><b id="cameraSourceCount" style="font-size:14px">0 / 2 terhubung</b></div></div><p class="camera-hint">Penghitung mengikuti simulasi WIM dan status video yang dimuat. Ini belum merupakan penghitung otomatis dari rekaman CCTV; penghitungan kamera fisik memerlukan analitik video atau sensor penghitung terintegrasi.</p>
+<div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3">
+  <div class="flex items-center justify-between gap-2"><div><b class="text-sm text-slate-800">Panel pembacaan sensor WIM</b><p class="text-xs text-slate-500">Nilai berubah saat kendaraan simulasi selesai melewati area pemeriksaan.</p></div><span class="text-xs rounded-full bg-amber-100 text-amber-800 px-2 py-1 font-bold" id="sensorState">MENUNGGU KENDARAAN</span></div>
+  <div class="sensor-readout">
+    <div class="sensor-tile"><small>Berat WIM</small><strong id="sensorWeight">— ton</strong><em>Load cell / sensor berat</em></div>
+    <div class="sensor-tile"><small>JBI acuan</small><strong id="sensorJbi">— ton</strong><em>Batas kendaraan</em></div>
+    <div class="sensor-tile"><small>Tinggi terukur</small><strong id="sensorHeight">— m</strong><em>Laser dimensi</em></div>
+    <div class="sensor-tile"><small>Lebar terukur</small><strong id="sensorWidth">— m</strong><em>Laser dimensi</em></div>
+  </div>
+  <div class="grid grid-cols-2 gap-2 text-xs text-slate-600"><div class="bg-white rounded-lg p-2 border border-slate-200">Panjang: <b id="sensorLength">— m</b></div><div class="bg-white rounded-lg p-2 border border-slate-200">ID kendaraan: <b id="sensorPlate">Belum terbaca</b></div></div>
+  <div class="rounded-lg bg-slate-900 text-white p-3"><div class="flex justify-between text-xs"><b>INDIKATOR TIMBANGAN DIGITAL</b><span id="scaleState" class="text-emerald-300">STANDBY</span></div><div class="text-3xl font-black tracking-wider mt-2" id="scaleDisplay">00000 <span class="text-sm">kg</span></div><div class="h-2 rounded bg-slate-700 mt-2 overflow-hidden"><div id="scaleBar" class="h-full bg-cyan-400" style="width:0%;transition:width .6s"></div></div><p class="text-xs text-slate-400 mt-2">Tampilan timbangan ini merupakan data simulasi, bukan pembacaan alat fisik.</p></div>
+</div>
+ <div class="rounded-xl border border-sky-100 bg-sky-50 p-3 text-xs text-sky-900 leading-relaxed"><b>Catatan integrasi:</b> kamera CCTV umumnya mengirim RTSP. Browser tidak memutar RTSP secara langsung. Pengelola/Tim IT perlu menyediakan gateway yang mengubah stream menjadi HLS atau WebRTC. URL stream harus berasal dari sistem resmi; jangan memasukkan username, password, atau token kamera ke halaman website.</div>
+</section>
+
+<section id="area-wim" class="space-y-4"><div class="rounded-lg bg-sky-50 border border-sky-100 p-3 text-xs text-sky-900">Skema di bawah ini tetap dipertahankan sebagai gambar rancangan posisi perangkat. Saat video tersedia, tampilan kamera aktual muncul pada panel pemantauan di atas.</div>
+ <div><h2 class="section-title">Visualisasi area pemeriksaan WIM</h2><p class="section-note">Skema teknis konseptual penempatan perangkat dari dua sudut pandang. Tampilan kamera aktual berada pada panel pemantauan di atas.</p></div>
+ <div class="grid lg:grid-cols-2 gap-4">
+  <article class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+   <div class="flex items-center justify-between gap-2 mb-3"><div><div class="text-xs font-bold text-sky-700">VIEW 01</div><h3 class="font-extrabold text-slate-800">Tampak atas · Area lajur WIM</h3></div><span class="text-xs rounded-full bg-sky-50 text-sky-700 px-3 py-1">TOP VIEW</span></div>
+   <svg viewBox="0 0 720 330" role="img" aria-label="Tampak atas lajur jalan tol dengan truk, kamera ANPR, sensor dimensi, loop penghitung kendaraan dan sensor WIM" style="width:100%;height:auto;border-radius:12px;background:#eaf1f7">
+    <defs><marker id="topArrow" markerWidth="8" markerHeight="8" refX="5" refY="3" orient="auto"><path d="M0 0L6 3L0 6" fill="#2563eb"/></marker></defs>
+    <rect x="18" y="28" width="684" height="274" rx="15" fill="#dce7ef"/><rect x="30" y="43" width="660" height="244" rx="9" fill="#35465a"/>
+    <path d="M45 165H675" stroke="#f5f7fa" stroke-width="3" stroke-dasharray="22 16"/>
+    <path d="M45 58H675M45 272H675" stroke="#dce5ed" stroke-width="3"/>
+    <text x="48" y="83" fill="#dbe7f1" font-size="12" font-weight="700">LAJUR KENDARAAN · ARAH PERJALANAN</text>
+    <path d="M85 118H630" stroke="#4bd3f1" stroke-width="3" stroke-dasharray="7 7" marker-end="url(#topArrow)"/>
+    <g transform="translate(275 128)"><rect x="0" y="0" width="130" height="70" rx="9" fill="#e2a83b" stroke="#fff" stroke-width="3"/><rect x="12" y="10" width="104" height="50" rx="5" fill="#c78b29"/><rect x="8" y="8" width="22" height="54" rx="3" fill="#9bc5dd"/><rect x="100" y="8" width="22" height="54" rx="3" fill="#9bc5dd"/><text x="65" y="39" text-anchor="middle" fill="#fff" font-size="13" font-weight="800">TRUK</text></g>
+    <g stroke="#56d5f2" stroke-width="3" fill="none"><rect x="240" y="105" width="200" height="116" rx="5" stroke-dasharray="8 5"/><path d="M240 105V221M440 105V221"/></g>
+    <g><rect x="170" y="49" width="36" height="25" rx="5" fill="#163b5c"/><circle cx="188" cy="61" r="6" fill="#62d9f2"/><path d="M188 74L245 122" stroke="#62d9f2" stroke-width="2" stroke-dasharray="4 4"/><text x="112" y="42" fill="#173b5b" font-size="12" font-weight="700">KAMERA ANPR</text></g>
+    <g><rect x="477" y="49" width="36" height="25" rx="5" fill="#163b5c"/><circle cx="495" cy="61" r="6" fill="#62d9f2"/><path d="M495 74L428 123" stroke="#62d9f2" stroke-width="2" stroke-dasharray="4 4"/><text x="526" y="65" fill="#173b5b" font-size="12" font-weight="700">CCTV</text></g>
+    <g fill="none" stroke="#e9c85b" stroke-width="4"><rect x="250" y="91" width="180" height="14" rx="3"/><rect x="250" y="221" width="180" height="14" rx="3"/></g>
+    <text x="455" y="244" fill="#fff1b4" font-size="12" font-weight="700">SENSOR DIMENSI / LASER</text>
+    <g fill="#62d9f2" stroke="#d8f7ff" stroke-width="2"><rect x="230" y="258" width="220" height="9" rx="3"/><rect x="230" y="88" width="220" height="9" rx="3"/></g>
+    <text x="52" y="250" fill="#b9eefa" font-size="12" font-weight="700">PLAT WIM / SENSOR BEBAN</text>
+    <path d="M178 240L226 263" stroke="#b9eefa" stroke-width="2"/>
+    <g><circle cx="560" cy="210" r="18" fill="#0f2942"/><path d="M550 210h20M560 200v20" stroke="#69e3ff" stroke-width="3"/><text x="588" y="214" fill="#fff" font-size="12">Penghitung</text><text x="588" y="229" fill="#fff" font-size="12">kendaraan</text></g>
+   </svg>
+   <div class="grid grid-cols-2 gap-2 mt-3 text-xs"><div class="rounded-lg bg-slate-50 p-3 text-slate-700"><b>Deteksi identitas</b><p class="mt-1 text-slate-500">Kamera ANPR dan CCTV merekam kendaraan serta pelat nomor.</p></div><div class="rounded-lg bg-slate-50 p-3 text-slate-700"><b>Deteksi kendaraan</b><p class="mt-1 text-slate-500">Loop / sensor lajur menghitung kendaraan yang melewati titik pemeriksaan.</p></div></div>
+  </article>
+  <article class="bg-white border border-slate-200 rounded-2xl p-4 shadow-sm">
+   <div class="flex items-center justify-between gap-2 mb-3"><div><div class="text-xs font-bold text-sky-700">VIEW 02</div><h3 class="font-extrabold text-slate-800">Tampak samping · Portal sensor</h3></div><span class="text-xs rounded-full bg-sky-50 text-sky-700 px-3 py-1">SIDE VIEW</span></div>
+   <svg viewBox="0 0 720 330" role="img" aria-label="Tampak samping truk melewati portal WIM dilengkapi kamera ANPR, sensor laser dimensi, penghitung kendaraan dan sensor berat di jalan" style="width:100%;height:auto;border-radius:12px;background:#eaf1f7">
+    <defs><linearGradient id="sideSky" x2="0" y2="1"><stop stop-color="#eaf5fc"/><stop offset="1" stop-color="#d7e5ef"/></linearGradient></defs>
+    <rect x="18" y="25" width="684" height="280" rx="15" fill="url(#sideSky)"/><rect x="30" y="225" width="660" height="62" rx="5" fill="#46566a"/><path d="M30 257H690" stroke="#f4f6f8" stroke-width="3" stroke-dasharray="28 18"/>
+    <path d="M205 64V225M510 64V225M205 64H510" stroke="#60788d" stroke-width="15" fill="none"/><path d="M205 64H510" stroke="#a9bdcc" stroke-width="9"/>
+    <g fill="#183b5b"><rect x="235" y="60" width="35" height="22" rx="4"/><rect x="337" y="60" width="35" height="22" rx="4"/><rect x="445" y="60" width="35" height="22" rx="4"/></g>
+    <g stroke="#22b8d7" stroke-width="2.5" stroke-dasharray="5 5"><path d="M252 82V190"/><path d="M354 82V190"/><path d="M462 82V190"/></g>
+    <g transform="translate(250 135)"><rect x="0" y="15" width="185" height="67" rx="5" fill="#327da5" stroke="#fff" stroke-width="2"/><path d="M185 35h48l34 31v16H185z" fill="#e1aa3d" stroke="#fff" stroke-width="2"/><path d="M194 41h34l23 22h-57z" fill="#b9d8e9"/><circle cx="48" cy="88" r="17" fill="#172537" stroke="#b8c8d4" stroke-width="5"/><circle cx="48" cy="88" r="5" fill="#dbe5ec"/><circle cx="197" cy="88" r="17" fill="#172537" stroke="#b8c8d4" stroke-width="5"/><circle cx="197" cy="88" r="5" fill="#dbe5ec"/></g>
+    <g><rect x="165" y="96" width="30" height="21" rx="4" fill="#153d5e"/><circle cx="180" cy="106" r="5" fill="#69e3ff"/><path d="M180 117L250 157" stroke="#153d5e" stroke-width="2" stroke-dasharray="4 4"/><text x="55" y="91" fill="#183b5b" font-size="12" font-weight="700">KAMERA ANPR</text></g>
+    <g><rect x="520" y="92" width="42" height="25" rx="4" fill="#153d5e"/><circle cx="541" cy="104" r="6" fill="#69e3ff"/><path d="M541 117L460 150" stroke="#153d5e" stroke-width="2" stroke-dasharray="4 4"/><text x="570" y="101" fill="#183b5b" font-size="12" font-weight="700">CCTV</text></g>
+    <g fill="#d5f6fc" stroke="#24b7d4" stroke-width="2"><rect x="300" y="219" width="95" height="8" rx="2"/><rect x="420" y="219" width="38" height="8" rx="2"/></g>
+    <text x="305" y="211" fill="#183b5b" font-size="11" font-weight="700">PLAT WIM</text>
+    <path d="M340 217L340 197" stroke="#183b5b" stroke-width="2"/>
+    <g><rect x="585" y="180" width="75" height="40" rx="7" fill="#153d5e"/><text x="622" y="196" text-anchor="middle" fill="#b9edfa" font-size="10">COUNTER</text><text x="622" y="211" text-anchor="middle" fill="#fff" font-size="13" font-weight="800">VEH 001</text></g>
+    <text x="250" y="43" fill="#183b5b" font-size="12" font-weight="700">PORTAL SENSOR DIMENSI / LASER</text>
+    <text x="48" y="282" fill="#e5eef6" font-size="11" font-weight="700">PERMUKAAN LAJUR JALAN TOL</text>
+   </svg>
+   <div class="grid grid-cols-2 gap-2 mt-3 text-xs"><div class="rounded-lg bg-slate-50 p-3 text-slate-700"><b>Sensor laser dimensi</b><p class="mt-1 text-slate-500">Memindai profil untuk estimasi panjang, lebar, dan tinggi kendaraan.</p></div><div class="rounded-lg bg-slate-50 p-3 text-slate-700"><b>Sensor WIM</b><p class="mt-1 text-slate-500">Membaca beban dinamis saat kendaraan melintas di atas sensor jalan.</p></div></div>
+  </article>
+ </div>
+ <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">KAMERA ANPR</div><div class="text-lg font-extrabold text-slate-800">Pengenalan pelat</div><div class="text-xs text-slate-500 mt-1">Identifikasi kendaraan (simulasi)</div></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">CCTV</div><div class="text-lg font-extrabold text-slate-800">Pemantauan visual</div><div class="text-xs text-slate-500 mt-1">Tampilan kamera perlu sumber video</div></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">COUNTER</div><div class="text-lg font-extrabold text-slate-800">0001 kendaraan</div><div class="text-xs text-slate-500 mt-1">Penghitung demo, bukan hitungan aktual</div></div>
+  <div class="bg-white border border-slate-200 rounded-xl p-4"><div class="text-xs text-slate-500">WIM + DIMENSI</div><div class="text-lg font-extrabold text-slate-800">Pemindaian multi-sensor</div><div class="text-xs text-slate-500 mt-1">Nilai pembacaan dari dataset simulasi</div></div>
+ </div>
+</section>
+
+<section class="sim-panel" id="simulator">
+ <div class="sim-head">
+  <div><div class="hero-tag">LIVE DEMO · DATASET SIMULASI</div><h2 class="text-lg font-bold text-white mt-2">Simulasi kendaraan melintasi gerbang WIM</h2><p class="text-xs text-slate-400 mt-1">Pilih salah satu dari 30 kendaraan, lalu jalankan proses pemindaian.</p></div>
+  <div class="flex flex-wrap gap-2 items-center"><select id="simVehicle" class="sim-control" aria-label="Pilih kendaraan"></select><button id="simStart" class="sim-btn">▶ Mulai simulasi</button><button id="simReset" class="sim-btn alt">↺ Ulangi</button></div>
+ </div>
+ <div class="sim-stage">
+  <div class="sim-skyline"></div><div class="sim-stage-label">GERBANG PEMERIKSAAN · LAJUR WIM</div>
+  <div class="sim-gantry"><div class="sim-sensor a"></div><div class="sim-sensor b"></div><div class="sim-sensor c"></div></div>
+  <div class="sim-beam" id="simBeam"></div>
+  <div class="sim-lane"></div>
+  <div class="sim-truck" id="simTruck"><svg viewBox="0 0 220 105" role="img" aria-label="Ilustrasi truk yang bergerak"><rect x="4" y="20" width="143" height="57" rx="5" fill="#397da5" stroke="#c4d9e8" stroke-width="2"/><path d="M147 39h39l25 25v13h-64z" fill="#e5b94e" stroke="#f7dc8a" stroke-width="2"/><path d="M155 44h27l17 18h-44z" fill="#b9d9eb"/><path d="M13 29h125v39H13z" fill="#4d91b5"/><path d="M20 36h110M20 47h110M20 58h110" stroke="#a6c6d8" stroke-width="2" opacity=".6"/><circle cx="43" cy="81" r="14" fill="#101a28" stroke="#9aaebe" stroke-width="4"/><circle cx="43" cy="81" r="5" fill="#d6e1e9"/><circle cx="160" cy="81" r="14" fill="#101a28" stroke="#9aaebe" stroke-width="4"/><circle cx="160" cy="81" r="5" fill="#d6e1e9"/><circle cx="196" cy="81" r="14" fill="#101a28" stroke="#9aaebe" stroke-width="4"/><circle cx="196" cy="81" r="5" fill="#d6e1e9"/></svg></div>
+ </div>
+ <div class="px-4 py-3 flex flex-wrap items-center justify-between gap-2 border-t border-slate-700"><span class="text-xs text-slate-300" id="simStageText">Status: kendaraan siap memasuki area pemeriksaan.</span><span class="sim-stage-status" id="simProgress">MENUNGGU PERINTAH</span></div>
+ <div class="sim-result" id="simResult"><div class="sim-metric"><small>Berat WIM</small><b>—</b></div><div class="sim-metric"><small>JBI</small><b>—</b></div><div class="sim-metric"><small>Dimensi P × L × T</small><b>—</b></div><div class="sim-metric"><small>Hasil indikasi</small><b>Belum dipindai</b></div></div>
+ <div class="px-4 pb-4 text-xs text-slate-400">Urutan proses: kamera ANPR membaca identitas → sensor dimensi memindai profil → plat WIM membaca berat dinamis → sistem mengirim indikasi ke petugas. Animasi ini merupakan visualisasi konseptual, bukan data sensor langsung.</div>
+</section>
+
+
+<section id="konsep" class="space-y-4">
+ <div><h2 class="section-title">Ruang lingkup dan rencana pelaksanaan PKL</h2><p class="section-note">Bagian ini mempertahankan fokus revisi dosen: WIM dan alur verifikasi kendaraan terindikasi ODOL, bukan sistem pembayaran otomatis atau wireless charging.</p></div>
+ <div class="project-grid">
+  <article class="project-card"><h3>01 · Fokus dan lokasi pilot</h3><p><b>Fokus:</b> deteksi awal kendaraan terindikasi Over Dimension Over Load menggunakan WIM dan sensor dimensi, dilanjutkan verifikasi petugas.</p><p class="mt-2"><b>Lokasi pilot:</b> segmen jalan tol yang akan ditetapkan bersama pengelola tol saat PKL. KM 420+400 pada dataset hanya lokasi simulasi, bukan penetapan lokasi aktual.</p></article>
+  <article class="project-card"><h3>02 · Aktor yang terlibat</h3><ul><li>Pengelola/operator jalan tol: akses lokasi, kamera, dan data operasional.</li><li>Tim IT/teknis: jaringan, server, dan integrasi kamera.</li><li>Petugas berwenang: pemeriksaan dokumen dan fisik serta keputusan verifikasi.</li><li>Tim pengembang/proyek: dashboard, pencatatan, dan evaluasi.</li></ul></article>
+  <article class="project-card"><h3>03 · Data yang diperlukan</h3><ul><li>Video kamera atas dan samping serta waktu perekaman.</li><li>Data WIM, kecepatan, klasifikasi sumbu, dan JBI acuan.</li><li>Hasil ukur panjang, lebar, dan tinggi.</li><li>Hasil pemeriksaan petugas untuk validasi.</li><li>Data kondisi perangkat dan kalibrasi.</li></ul><p class="mt-2"><b>Status prototipe:</b> 30 baris dataset yang tersedia masih data simulasi.</p></article>
+ </div>
+ <div class="grid lg:grid-cols-2 gap-3">
+  <article class="project-card"><h3>04 · Komponen estimasi biaya awal</h3><table class="project-table"><thead><tr><th>Komponen</th><th>Dasar perhitungan</th></tr></thead><tbody><tr><td>2 unit kamera dan dudukan</td><td>Spesifikasi, resolusi, kondisi outdoor, dan pemasangan.</td></tr><tr><td>Perangkat WIM dan sensor dimensi</td><td>Jenis sensor, jumlah lajur, kalibrasi, dan integrasi.</td></tr><tr><td>Server, jaringan, dan penyimpanan</td><td>Kebutuhan bandwidth, retensi video, dan keamanan.</td></tr><tr><td>Pengembangan integrasi dan pemeliharaan</td><td>Jasa integrasi, pengujian, pelatihan, dan pemeliharaan.</td></tr></tbody></table><p class="mt-2"><b>Nilai rupiah:</b> diisi setelah survei lokasi dan permintaan penawaran vendor/pengelola. Tidak dicantumkan angka rekaan pada prototipe.</p></article>
+  <article class="project-card"><h3>05 · Risiko dan mitigasi</h3><ul><li><b>False positive/negative WIM:</b> kalibrasi, pengaturan ambang, dan pemeriksaan ulang.</li><li><b>ANPR gagal membaca:</b> simpan cuplikan CCTV dan lakukan pencocokan manual.</li><li><b>Dimensi salah terbaca:</b> periksa terpal, antena, dan objek nonstruktural.</li><li><b>Gangguan jaringan/kamera:</b> pencatatan status perangkat dan penyimpanan lokal.</li><li><b>Privasi dan keamanan:</b> izin akses, pembatasan pengguna, dan pengamanan kredensial.</li></ul></article>
+ </div>
+ <article class="project-card"><h3>06 · Indikator keberhasilan evaluasi</h3><div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-2"><div class="rounded-lg bg-slate-50 p-3"><b class="text-slate-800 text-xs">Keberhasilan pembacaan ANPR</b><p>Persentase pelat terbaca benar dari sampel uji.</p></div><div class="rounded-lg bg-slate-50 p-3"><b class="text-slate-800 text-xs">Akurasi indikasi WIM</b><p>Kesesuaian indikasi dengan hasil pemeriksaan pembanding.</p></div><div class="rounded-lg bg-slate-50 p-3"><b class="text-slate-800 text-xs">Akurasi dimensi</b><p>Selisih hasil sensor terhadap pengukuran verifikasi.</p></div><div class="rounded-lg bg-slate-50 p-3"><b class="text-slate-800 text-xs">Waktu proses</b><p>Waktu dari kendaraan terdeteksi sampai data tampil di dashboard.</p></div></div></article>
+ <div class="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 leading-relaxed"><b>Prinsip verifikasi:</b> hasil WIM dan sensor dimensi hanya menjadi indikasi awal. Sistem tidak menetapkan pelanggaran atau denda secara otomatis. Penetapan akhir dilakukan setelah pemeriksaan oleh petugas berwenang. Estimasi kerugian jalan dan besaran pembayaran/denda ditampilkan sebagai dua komponen terpisah dan harus menggunakan dasar perhitungan serta ketentuan yang telah diverifikasi.</div>
+</section>
+
+    <!-- Summary Cards -->
+    <section id="dashboard"><div class="mb-3"><h2 class="section-title">Ringkasan pemantauan kendaraan</h2><p class="section-note">Ikhtisar hasil pembacaan WIM dan indikasi kendaraan pada dataset simulasi.</p></div><div class="grid grid-cols-2 md:grid-cols-5 gap-4" id="summaryCards"></div></section>
+
+    <!-- Filter & Rule Info -->
+    <section id="data" class="bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex flex-wrap gap-2" id="filterButtons">
+        <button onclick="setFilter('ALL')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-blue-600 text-white">Semua (30)</button>
+        <button onclick="setFilter('Tidak Terindikasi (Normal)')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">Normal</button>
+        <button onclick="setFilter('Indikasi Over Load')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">Over Load</button>
+        <button onclick="setFilter('Indikasi Over Dimension')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">Over Dimension</button>
+        <button onclick="setFilter('Indikasi ODOL')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 hover:bg-slate-700">ODOL</button>
+        <button onclick="setFilter('MISCLASS')" class="filter-btn px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600/30 text-amber-200 border border-amber-500/40 hover:bg-amber-600/40">Uji Salah Klasifikasi (5)</button>
+      </div>
+      <div class="extra-controls"><input id="vehicleSearch" placeholder="Cari ID atau jenis kendaraan..." /><button onclick="exportCSV()">Unduh CSV 30 Kendaraan</button></div><div class="text-xs text-slate-400">
+        Aturan: Overload jika <span class="text-slate-200 font-semibold">Berat WIM &gt; JBI</span> • Over Dimension jika <span class="text-slate-200 font-semibold">P/L/T &gt; Batas Acuan</span>
+      </div>
+    </section>
+
+    <!-- Table -->
+    <section class="bg-slate-900 border border-slate-800 rounded-xl overflow-hidden">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead class="bg-slate-800/90 text-slate-300 uppercase">
+            <tr>
+              <th class="p-3">ID</th>
+              <th class="p-3">Jenis & Sumbu</th>
+              <th class="p-3">JBI / WIM (Ton)</th>
+              <th class="p-3">Overload %</th>
+              <th class="p-3">P x L x T (m)</th>
+              <th class="p-3">Indikasi Sistem</th>
+              <th class="p-3">Uji Salah Klasifikasi</th>
+              <th class="p-3">Keputusan Verifikator</th>
+            </tr>
+          </thead>
+          <tbody id="vehicleTableBody" class="divide-y divide-slate-800"></tbody>
+        </table>
+      </div>
+    </section>
+  
+<section class="grid md:grid-cols-2 gap-4" id="verifikasi">
+ <article class="bg-slate-900 border border-slate-800 rounded-xl p-5"><h2 class="section-title">Uji verifikasi & salah klasifikasi</h2><p class="section-note">Lima contoh uji khusus pada dataset untuk menunjukkan mengapa keputusan akhir perlu pemeriksaan manusia.</p><div class="space-y-2 text-xs text-slate-300">
+ <div class="misclass">VEH-026 · Potensi false positive WIM — indikasi overload +2,5% perlu ditinjau terhadap toleransi dan kalibrasi.</div>
+ <div class="misclass">VEH-027 · Potensi false negative WIM — kendaraan perlu pemeriksaan manual karena dinamika saat melintas.</div>
+ <div class="misclass">VEH-028 · Sensor dimensi membaca terpal — petugas memastikan bagian yang terukur.</div>
+ <div class="misclass">VEH-029 · Gangguan ANPR — citra pelat dan waktu deteksi dicocokkan manual.</div>
+ <div class="misclass">VEH-030 · Koreksi klasifikasi sumbu/JBI — jenis kendaraan harus dipastikan sebelum keputusan.</div>
+ </div></article>
+ <article class="bg-slate-900 border border-slate-800 rounded-xl p-5"><h2 class="section-title">Acuan simulasi & catatan regulasi</h2><p class="section-note">Parameter awal berdasarkan kelompok kendaraan pada dataset yang diberikan.</p>
+ <div class="overflow-x-auto"><table class="w-full text-xs"><thead class="text-slate-400"><tr><th class="p-2">Kelompok</th><th class="p-2">JBI</th><th class="p-2">Batas P × L × T</th></tr></thead><tbody class="divide-y divide-slate-800 text-slate-200"><tr><td class="p-2">2 sumbu</td><td class="p-2">16 ton</td><td class="p-2">9 × 2,5 × 4,2 m</td></tr><tr><td class="p-2">3 sumbu</td><td class="p-2">24 ton</td><td class="p-2">12 × 2,5 × 4,2 m</td></tr><tr><td class="p-2">4 sumbu</td><td class="p-2">32 ton</td><td class="p-2">15 × 2,5 × 4,2 m</td></tr><tr><td class="p-2">5 sumbu</td><td class="p-2">42 ton</td><td class="p-2">18 × 2,5 × 4,2 m</td></tr></tbody></table></div>
+ <p class="footnote mt-3">Dataset menyebut UU 22/2009, PP 55/2012, PM 18/2021, dan SE Menhub 116/2021 sebagai referensi awal. Parameter dan dasar hukum wajib diperiksa kembali pada dokumen resmi sebelum digunakan untuk penetapan pelanggaran atau sanksi.</p></article>
+</section>
+<div class="misclass"><strong>Catatan penting:</strong> Dataset dan angka di dashboard merupakan data simulasi akademik. Hasil WIM/sensor adalah indikasi awal; status pelanggaran, tindakan, dan sanksi hanya ditentukan setelah pemeriksaan oleh petugas berwenang. Estimasi dampak kerusakan jalan tidak sama dengan denda dan tidak dihitung sebagai nilai pembayaran pada versi ini.</div>
+</main>
+
+  <script>
+    const vehicles = [{"No":1,"ID_Kendaraan":"VEH-001","Waktu_Deteksi":"2026-11-16 07:12:04","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":14.8,"Selisih_Ton":-1.2,"Overload_Pct":-7.5,"Panjang_m":8.6,"Lebar_m":2.4,"Tinggi_m":3.65,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Operasi normal, berat & dimensi di bawah batas."},{"No":2,"ID_Kendaraan":"VEH-002","Waktu_Deteksi":"2026-11-16 07:18:30","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":15.6,"Selisih_Ton":-0.4,"Overload_Pct":-2.5,"Panjang_m":8.9,"Lebar_m":2.45,"Tinggi_m":3.9,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Mendekati batas JBI namun masih di bawah 16,0 ton."},{"No":3,"ID_Kendaraan":"VEH-003","Waktu_Deteksi":"2026-11-16 07:25:11","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":12.2,"Selisih_Ton":-3.8,"Overload_Pct":-23.75,"Panjang_m":8.2,"Lebar_m":2.35,"Tinggi_m":3.4,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Muatan ringan, dimensi sesuai."},{"No":4,"ID_Kendaraan":"VEH-004","Waktu_Deteksi":"2026-11-16 07:34:52","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Besar (3 Sumbu)","Sumbu":"1.22","JBI_Ton":24.0,"Berat_WIM_Ton":22.4,"Selisih_Ton":-1.6,"Overload_Pct":-6.67,"Panjang_m":11.4,"Lebar_m":2.48,"Tinggi_m":3.85,"Batas_PLT_m":"12.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Berat dan dimensi aman sesuai ketentuan."},{"No":5,"ID_Kendaraan":"VEH-005","Waktu_Deteksi":"2026-11-16 07:41:19","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Besar (3 Sumbu)","Sumbu":"1.22","JBI_Ton":24.0,"Berat_WIM_Ton":23.5,"Selisih_Ton":-0.5,"Overload_Pct":-2.08,"Panjang_m":11.8,"Lebar_m":2.46,"Tinggi_m":4.05,"Batas_PLT_m":"12.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Dalam batas aman JBI dan tinggi maksimal."},{"No":6,"ID_Kendaraan":"VEH-006","Waktu_Deteksi":"2026-11-16 07:50:05","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Tronton (4 Sumbu)","Sumbu":"1.2-22","JBI_Ton":32.0,"Berat_WIM_Ton":29.8,"Selisih_Ton":-2.2,"Overload_Pct":-6.87,"Panjang_m":14.2,"Lebar_m":2.49,"Tinggi_m":3.95,"Batas_PLT_m":"15.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Kondisi normal, beban terdistribusi baik."},{"No":7,"ID_Kendaraan":"VEH-007","Waktu_Deteksi":"2026-11-16 08:03:47","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Tronton (4 Sumbu)","Sumbu":"1.2-22","JBI_Ton":32.0,"Berat_WIM_Ton":31.1,"Selisih_Ton":-0.9,"Overload_Pct":-2.81,"Panjang_m":14.6,"Lebar_m":2.47,"Tinggi_m":4.1,"Batas_PLT_m":"15.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Di bawah JBI 32 ton, dimensi aman."},{"No":8,"ID_Kendaraan":"VEH-008","Waktu_Deteksi":"2026-11-16 08:12:22","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Trailer \/ Gandeng (5 Sumbu)","Sumbu":"1.22-22","JBI_Ton":42.0,"Berat_WIM_Ton":38.5,"Selisih_Ton":-3.5,"Overload_Pct":-8.33,"Panjang_m":17.2,"Lebar_m":2.5,"Tinggi_m":4.0,"Batas_PLT_m":"18.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Muatan terukur di bawah batas JBI 42 ton."},{"No":9,"ID_Kendaraan":"VEH-009","Waktu_Deteksi":"2026-11-16 08:20:14","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Trailer \/ Gandeng (5 Sumbu)","Sumbu":"1.22-22","JBI_Ton":42.0,"Berat_WIM_Ton":40.9,"Selisih_Ton":-1.1,"Overload_Pct":-2.62,"Panjang_m":17.6,"Lebar_m":2.48,"Tinggi_m":4.12,"Batas_PLT_m":"18.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Beban mendekati JBI, tidak ada pelanggaran."},{"No":10,"ID_Kendaraan":"VEH-010","Waktu_Deteksi":"2026-11-16 08:29:58","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":14.1,"Selisih_Ton":-1.9,"Overload_Pct":-11.88,"Panjang_m":8.5,"Lebar_m":2.38,"Tinggi_m":3.55,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Tidak Perlu Tindakan (Normal)","Keputusan_Verifikator":"Sesuai batas berat dan dimensi; kendaraan melanjutkan perjalanan.","Catatan_Uji":"Kendaraan logistik reguler, status normal."},{"No":11,"ID_Kendaraan":"VEH-011","Waktu_Deteksi":"2026-11-16 08:37:10","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":19.6,"Selisih_Ton":3.6,"Overload_Pct":22.5,"Panjang_m":8.8,"Lebar_m":2.45,"Tinggi_m":3.8,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Load","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Kelebihan muatan 3,6 ton (+22,5%), dimensi normal."},{"No":12,"ID_Kendaraan":"VEH-012","Waktu_Deteksi":"2026-11-16 08:45:02","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Besar (3 Sumbu)","Sumbu":"1.22","JBI_Ton":24.0,"Berat_WIM_Ton":29.4,"Selisih_Ton":5.4,"Overload_Pct":22.5,"Panjang_m":11.7,"Lebar_m":2.48,"Tinggi_m":3.95,"Batas_PLT_m":"12.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Load","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Kelebihan muatan 5,4 ton (+22,5%), dimensi aman."},{"No":13,"ID_Kendaraan":"VEH-013","Waktu_Deteksi":"2026-11-16 08:53:41","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Besar (3 Sumbu)","Sumbu":"1.22","JBI_Ton":24.0,"Berat_WIM_Ton":31.2,"Selisih_Ton":7.2,"Overload_Pct":30.0,"Panjang_m":11.9,"Lebar_m":2.49,"Tinggi_m":4.1,"Batas_PLT_m":"12.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Load","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Kelebihan muatan 7,2 ton (+30,0%), tinggi di bawah 4,2 m."},{"No":14,"ID_Kendaraan":"VEH-014","Waktu_Deteksi":"2026-11-16 09:04:19","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Tronton (4 Sumbu)","Sumbu":"1.2-22","JBI_Ton":32.0,"Berat_WIM_Ton":39.2,"Selisih_Ton":7.2,"Overload_Pct":22.5,"Panjang_m":14.5,"Lebar_m":2.5,"Tinggi_m":4.05,"Batas_PLT_m":"15.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Load","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Kelebihan muatan 7,2 ton (+22,5%), dimensi normal."},{"No":15,"ID_Kendaraan":"VEH-015","Waktu_Deteksi":"2026-11-16 09:15:33","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Trailer \/ Gandeng (5 Sumbu)","Sumbu":"1.22-22","JBI_Ton":42.0,"Berat_WIM_Ton":51.0,"Selisih_Ton":9.0,"Overload_Pct":21.43,"Panjang_m":17.5,"Lebar_m":2.48,"Tinggi_m":4.15,"Batas_PLT_m":"18.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Load","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Kelebihan muatan 9,0 ton (+21,4%), dimensi normal."},{"No":16,"ID_Kendaraan":"VEH-016","Waktu_Deteksi":"2026-11-16 09:24:08","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":18.0,"Selisih_Ton":2.0,"Overload_Pct":12.5,"Panjang_m":8.7,"Lebar_m":2.42,"Tinggi_m":3.7,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Load","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Kelebihan muatan 2,0 ton (+12,5%), dimensi normal."},{"No":17,"ID_Kendaraan":"VEH-017","Waktu_Deteksi":"2026-11-16 09:32:44","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":14.5,"Selisih_Ton":-1.5,"Overload_Pct":-9.38,"Panjang_m":8.9,"Lebar_m":2.45,"Tinggi_m":4.55,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Dimension","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Berat normal (14,5 ton), tinggi melebihi batas (4,55 m > 4,2 m)."},{"No":18,"ID_Kendaraan":"VEH-018","Waktu_Deteksi":"2026-11-16 09:41:12","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Besar (3 Sumbu)","Sumbu":"1.22","JBI_Ton":24.0,"Berat_WIM_Ton":22.0,"Selisih_Ton":-2.0,"Overload_Pct":-8.33,"Panjang_m":13.4,"Lebar_m":2.48,"Tinggi_m":3.9,"Batas_PLT_m":"12.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Dimension","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Berat normal (22,0 ton), panjang melebihi batas (13,4 m > 12,0 m)."},{"No":19,"ID_Kendaraan":"VEH-019","Waktu_Deteksi":"2026-11-16 09:50:29","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Tronton (4 Sumbu)","Sumbu":"1.2-22","JBI_Ton":32.0,"Berat_WIM_Ton":30.2,"Selisih_Ton":-1.8,"Overload_Pct":-5.63,"Panjang_m":14.8,"Lebar_m":2.75,"Tinggi_m":4.0,"Batas_PLT_m":"15.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Dimension","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Berat normal (30,2 ton), lebar melebihi batas (2,75 m > 2,5 m)."},{"No":20,"ID_Kendaraan":"VEH-020","Waktu_Deteksi":"2026-11-16 09:58:16","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Besar (3 Sumbu)","Sumbu":"1.22","JBI_Ton":24.0,"Berat_WIM_Ton":21.8,"Selisih_Ton":-2.2,"Overload_Pct":-9.17,"Panjang_m":11.6,"Lebar_m":2.45,"Tinggi_m":4.48,"Batas_PLT_m":"12.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Dimension","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Berat aman, tinggi muatan melebihi batas (4,48 m)."},{"No":21,"ID_Kendaraan":"VEH-021","Waktu_Deteksi":"2026-11-16 10:07:51","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Trailer \/ Gandeng (5 Sumbu)","Sumbu":"1.22-22","JBI_Ton":42.0,"Berat_WIM_Ton":39.0,"Selisih_Ton":-3.0,"Overload_Pct":-7.14,"Panjang_m":19.6,"Lebar_m":2.5,"Tinggi_m":4.1,"Batas_PLT_m":"18.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Dimension","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Berat aman, panjang bak\/muatan melebihi batas (19,6 m > 18,0 m)."},{"No":22,"ID_Kendaraan":"VEH-022","Waktu_Deteksi":"2026-11-16 10:16:03","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Besar (3 Sumbu)","Sumbu":"1.22","JBI_Ton":24.0,"Berat_WIM_Ton":30.5,"Selisih_Ton":6.5,"Overload_Pct":27.08,"Panjang_m":13.2,"Lebar_m":2.55,"Tinggi_m":4.45,"Batas_PLT_m":"12.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi ODOL","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Overload (+27,1%) sekaligus over dimension (panjang & tinggi)."},{"No":23,"ID_Kendaraan":"VEH-023","Waktu_Deteksi":"2026-11-16 10:25:38","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Tronton (4 Sumbu)","Sumbu":"1.2-22","JBI_Ton":32.0,"Berat_WIM_Ton":41.0,"Selisih_Ton":9.0,"Overload_Pct":28.12,"Panjang_m":16.2,"Lebar_m":2.65,"Tinggi_m":4.35,"Batas_PLT_m":"15.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi ODOL","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Overload (+28,1%) sekaligus over dimension (panjang, lebar, tinggi)."},{"No":24,"ID_Kendaraan":"VEH-024","Waktu_Deteksi":"2026-11-16 10:34:19","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":21.2,"Selisih_Ton":5.2,"Overload_Pct":32.5,"Panjang_m":9.8,"Lebar_m":2.6,"Tinggi_m":4.4,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi ODOL","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Overload (+32,5%) sekaligus over dimension (tinggi & lebar)."},{"No":25,"ID_Kendaraan":"VEH-025","Waktu_Deteksi":"2026-11-16 10:42:55","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Trailer \/ Gandeng (5 Sumbu)","Sumbu":"1.22-22","JBI_Ton":42.0,"Berat_WIM_Ton":53.5,"Selisih_Ton":11.5,"Overload_Pct":27.38,"Panjang_m":19.2,"Lebar_m":2.7,"Tinggi_m":4.5,"Batas_PLT_m":"18.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi ODOL","Kasus_Uji_Salah_Klasifikasi":"Tidak","Status_Verifikator":"Terverifikasi Indikasi Pelanggaran","Keputusan_Verifikator":"Masuk daftar pemeriksaan petugas berwenang (BPTD\/Dishub\/PJR) untuk cek dokumen & fisik.","Catatan_Uji":"Overload (+27,4%) sekaligus over dimension (panjang, lebar, tinggi)."},{"No":26,"ID_Kendaraan":"VEH-026","Waktu_Deteksi":"2026-11-16 10:51:12","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":16.4,"Selisih_Ton":0.4,"Overload_Pct":2.5,"Panjang_m":8.8,"Lebar_m":2.45,"Tinggi_m":3.85,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Load","Kasus_Uji_Salah_Klasifikasi":"Ya \u2014 Potensi False Positive WIM","Status_Verifikator":"Perlu Verifikasi (Toleransi)","Keputusan_Verifikator":"Dikembalikan ke Normal \/ Peringatan Ringan (selisih +0,4 ton masih dalam batas toleransi dinamis sensor WIM).","Catatan_Uji":"UJI SALAH KLASIFIKASI (False Positive Potensial): Berat 16,4 ton (+2,5%) di ambang toleransi kalibrasi WIM."},{"No":27,"ID_Kendaraan":"VEH-027","Waktu_Deteksi":"2026-11-16 10:59:44","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Besar (3 Sumbu)","Sumbu":"1.22","JBI_Ton":24.0,"Berat_WIM_Ton":23.8,"Selisih_Ton":-0.2,"Overload_Pct":-0.83,"Panjang_m":11.7,"Lebar_m":2.48,"Tinggi_m":3.95,"Batas_PLT_m":"12.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Ya \u2014 Potensi False Negative WIM","Status_Verifikator":"Perlu Verifikasi Manual","Keputusan_Verifikator":"Diarahkan ke pemeriksaan lanjutan karena dinamika kendaraan melintas cepat berpotensi memengaruhi pembacaan WIM.","Catatan_Uji":"UJI SALAH KLASIFIKASI (False Negative Potensial): Berat terukur WIM 23,8 ton (di bawah JBI 24 ton), namun kendaraan melaju kencang\/loncat saat melintas."},{"No":28,"ID_Kendaraan":"VEH-028","Waktu_Deteksi":"2026-11-16 11:08:21","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Sedang (2 Sumbu)","Sumbu":"1.2","JBI_Ton":16.0,"Berat_WIM_Ton":14.2,"Selisih_Ton":-1.8,"Overload_Pct":-11.25,"Panjang_m":8.6,"Lebar_m":2.42,"Tinggi_m":4.26,"Batas_PLT_m":"9.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Dimension","Kasus_Uji_Salah_Klasifikasi":"Ya \u2014 False Positive Dimensi (Terpal)","Status_Verifikator":"Lolos setelah Verifikasi","Keputusan_Verifikator":"Dinyatakan Tidak Melanggar setelah petugas memastikan ketinggian ekstra hanya terpal\/muatan ringan non-struktural.","Catatan_Uji":"UJI SALAH KLASIFIKASI (Sensor Dimensi \/ Terpal): Tinggi terukur 4,26 m (+0,06 m di atas 4,2 m) akibat terpal berkibar\/antena."},{"No":29,"ID_Kendaraan":"VEH-029","Waktu_Deteksi":"2026-11-16 11:17:09","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Tronton (4 Sumbu)","Sumbu":"1.2-22","JBI_Ton":32.0,"Berat_WIM_Ton":30.5,"Selisih_Ton":-1.5,"Overload_Pct":-4.69,"Panjang_m":14.5,"Lebar_m":2.48,"Tinggi_m":3.9,"Batas_PLT_m":"15.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Tidak Terindikasi (Normal)","Kasus_Uji_Salah_Klasifikasi":"Ya \u2014 Gangguan Identitas \/ ANPR","Status_Verifikator":"Sedang Diperiksa","Keputusan_Verifikator":"Petugas mencocokkan citra kamera ANPR dan log waktu sebelum menetapkan status akhir.","Catatan_Uji":"UJI SALAH KLASIFIKASI (ANPR \/ Identitas): Karakter pelat nomor kabur\/kotor sehingga sistem menandai perlu peninjauan manual."},{"No":30,"ID_Kendaraan":"VEH-030","Waktu_Deteksi":"2026-11-16 11:25:47","Lokasi_KM":"Tol Semarang KM 420+400 (SIMULASI)","Jenis_Kendaraan":"Truk Besar (3 Sumbu)","Sumbu":"1.22","JBI_Ton":24.0,"Berat_WIM_Ton":25.0,"Selisih_Ton":1.0,"Overload_Pct":4.17,"Panjang_m":11.8,"Lebar_m":2.46,"Tinggi_m":4.0,"Batas_PLT_m":"12.0 x 2.5 x 4.2","Status_Indikasi_Sistem":"Indikasi Over Load","Kasus_Uji_Salah_Klasifikasi":"Ya \u2014 Salah Klasifikasi Sumbu\/JBI","Status_Verifikator":"Lolos setelah Koreksi JBI","Keputusan_Verifikator":"Dikoreksi menjadi Truk 3 Sumbu (JBI 24,0 ton); berat 25,0 ton hanya +4,17% (dalam toleransi), bukan pelanggaran berat.","Catatan_Uji":"UJI SALAH KLASIFIKASI (Klasifikasi Sumbu): Terdeteksi sementara sebagai 2 sumbu (JBI 16 ton) sebelum dikoreksi menjadi 3 sumbu (JBI 24 ton)."}];
+    let currentFilter = 'ALL';
+    let searchTerm = '';
+    document.addEventListener('input', e => { if(e.target.id==='vehicleSearch'){searchTerm=e.target.value.toLowerCase();renderTable();} });
+    function exportCSV(){const headers=Object.keys(vehicles[0]);const rows=vehicles.map(v=>headers.map(h=>'"'+String(v[h]??'').replaceAll('"','""')+'"').join(','));const csv='\\ufeff'+[headers.join(','),...rows].join('\\r\\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));a.download='dataset-tolsmart-odol-30-kendaraan.csv';a.click();URL.revokeObjectURL(a.href);}
+
+    function renderSummary() {
+      const total = vehicles.length;
+      const normal = vehicles.filter(v => v.Status_Indikasi_Sistem.includes('Normal')).length;
+      const ol = vehicles.filter(v => v.Status_Indikasi_Sistem === 'Indikasi Over Load').length;
+      const od = vehicles.filter(v => v.Status_Indikasi_Sistem === 'Indikasi Over Dimension').length;
+      const odol = vehicles.filter(v => v.Status_Indikasi_Sistem === 'Indikasi ODOL').length;
+
+      const cards = [
+        { label: 'Total Kendaraan (Simulasi)', val: total, cls: 'text-white' },
+        { label: 'Normal', val: normal, cls: 'text-emerald-400' },
+        { label: 'Indikasi Over Load', val: ol, cls: 'text-amber-400' },
+        { label: 'Indikasi Over Dimension', val: od, cls: 'text-sky-400' },
+        { label: 'Indikasi ODOL', val: odol, cls: 'text-rose-400' }
+      ];
+
+      document.getElementById('summaryCards').innerHTML = cards.map(c => `
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+          <div class="text-xs text-slate-400">${c.label}</div>
+          <div class="text-2xl font-bold mt-1 ${c.cls}">${c.val}</div>
+        </div>
+      `).join('');
+    }
+
+    function setFilter(f) {
+      currentFilter = f;
+      renderTable();
+    }
+
+    function renderTable() {
+      const filtered = vehicles.filter(v => {
+        const matchesSearch = !searchTerm || [v.ID_Kendaraan,v.Jenis_Kendaraan,v.Status_Indikasi_Sistem].some(x=>String(x).toLowerCase().includes(searchTerm));
+        if (!matchesSearch) return false;
+        if (currentFilter === 'ALL') return true;
+        if (currentFilter === 'MISCLASS') return v.Kasus_Uji_Salah_Klasifikasi !== 'Tidak';
+        return v.Status_Indikasi_Sistem === currentFilter;
+      });
+
+      document.getElementById('vehicleTableBody').innerHTML = filtered.map(v => {
+        const badgeCls = v.Status_Indikasi_Sistem.includes('Normal')
+          ? 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
+          : 'bg-rose-500/15 text-rose-300 border-rose-500/30';
+        const misBadge = v.Kasus_Uji_Salah_Klasifikasi !== 'Tidak'
+          ? `<span class="px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">${v.Kasus_Uji_Salah_Klasifikasi}</span>`
+          : `<span class="text-slate-500">Tidak</span>`;
+        return `
+          <tr class="hover:bg-slate-800/40 align-top">
+            <td class="p-3 font-semibold text-white whitespace-nowrap">${v.ID_Kendaraan}</td>
+            <td class="p-3 text-slate-300">${v.Jenis_Kendaraan}<br><span class="text-slate-500">Sumbu: ${v.Sumbu}</span></td>
+            <td class="p-3 text-slate-200 whitespace-nowrap">${v.JBI_Ton.toFixed(1)} t / ${v.Berat_WIM_Ton.toFixed(1)} t</td>
+            <td class="p-3 font-semibold ${v.Overload_Pct > 0 ? 'text-amber-300' : 'text-slate-400'}">${v.Overload_Pct > 0 ? '+' : ''}${v.Overload_Pct.toFixed(2)}%</td>
+            <td class="p-3 text-slate-300 whitespace-nowrap">${v.Panjang_m} x ${v.Lebar_m} x ${v.Tinggi_m}</td>
+            <td class="p-3 whitespace-nowrap"><span class="px-2 py-0.5 rounded border ${badgeCls}">${v.Status_Indikasi_Sistem}</span></td>
+            <td class="p-3">${misBadge}</td>
+            <td class="p-3 text-slate-300 max-w-xs">${v.Keputusan_Verifikator}</td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+
+    // WIM visual simulation: uses the supplied 30-row teaching dataset only.
+    let simTimer = null;
+    let simBusy = false;
+    const simStages = [
+      ['Kendaraan mendekati gerbang. Kamera ANPR mengambil citra dan membaca pelat nomor.','ANPR / CCTV'],
+      ['Sensor laser memindai profil kendaraan untuk memperoleh panjang, lebar, dan tinggi.','PEMINDAIAN DIMENSI'],
+      ['Kendaraan melintasi plat sensor WIM. Sistem membaca berat dinamis dan membandingkannya dengan JBI.','PENIMBANGAN WIM'],
+      ['Data sensor dipadukan. Hasil indikasi ditampilkan untuk pemeriksaan petugas.','HASIL TERKIRIM']
+    ];
+    function simSelected(){return vehicles.find(v=>v.ID_Kendaraan===document.getElementById('simVehicle').value)||vehicles[0];}
+    function simMetrics(v){
+      const over=v.Berat_WIM_Ton-v.JBI_Ton;
+      const dims=[v.Panjang_m>parseFloat(v.Batas_PLT_m.split(' x ')[0]),v.Lebar_m>parseFloat(v.Batas_PLT_m.split(' x ')[1]),v.Tinggi_m>parseFloat(v.Batas_PLT_m.split(' x ')[2])];
+      return {over,dims};
+    }
+    function showSimResult(v){
+      const {over,dims}=simMetrics(v);
+      document.getElementById('sensorState').textContent='HASIL SIMULASI';
+      document.getElementById('sensorWeight').textContent=v.Berat_WIM_Ton.toFixed(1)+' ton';
+      document.getElementById('sensorJbi').textContent=v.JBI_Ton.toFixed(1)+' ton';
+      document.getElementById('sensorHeight').textContent=v.Tinggi_m.toFixed(2)+' m';
+      document.getElementById('sensorWidth').textContent=v.Lebar_m.toFixed(2)+' m';
+      document.getElementById('sensorLength').textContent=v.Panjang_m.toFixed(2)+' m';
+      document.getElementById('sensorPlate').textContent=v.ID_Kendaraan;
+      document.getElementById('scaleState').textContent='TERBACA';
+      document.getElementById('scaleDisplay').innerHTML=Math.round(v.Berat_WIM_Ton*1000).toLocaleString('id-ID')+' <span class="text-sm">kg</span>';
+      document.getElementById('scaleBar').style.width=Math.min(100,(v.Berat_WIM_Ton/40)*100)+'%';
+      const overText=(over>0?'+':'')+over.toFixed(1)+' ton';
+      const dimFlags=['Panjang','Lebar','Tinggi'].filter((x,i)=>dims[i]);
+      document.getElementById('simResult').innerHTML=[
+        ['Berat WIM',v.Berat_WIM_Ton.toFixed(1)+' ton'],
+        ['JBI',v.JBI_Ton.toFixed(1)+' ton'],
+        ['Selisih berat',overText],
+        ['Dimensi P × L × T',v.Panjang_m+' × '+v.Lebar_m+' × '+v.Tinggi_m+' m']
+      ].map(([a,b])=>'<div class="sim-metric"><small>'+a+'</small><b>'+b+'</b></div>').join('')+
+      '<div class="col-span-full rounded-lg border border-slate-700 bg-slate-950/50 p-3"><div class="text-xs text-slate-400 mb-1">HASIL INDIKASI SISTEM</div><div class="font-bold text-sm '+(v.Status_Indikasi_Sistem.includes('Normal')?'text-emerald-300':'text-amber-300')+'">'+v.Status_Indikasi_Sistem+'</div><div class="text-xs text-slate-300 mt-1">Dimensi melebihi acuan: '+(dimFlags.length?dimFlags.join(', '):'Tidak ada')+'.</div><div class="text-xs text-slate-400 mt-2">Keputusan/verifikasi dataset: '+v.Status_Verifikator+'.</div></div>';
+    }
+    function resetSim(){
+      if(simTimer){clearInterval(simTimer);simTimer=null;}
+      simBusy=false;
+      document.getElementById('simTruck').classList.remove('moving');
+      document.getElementById('simBeam').classList.remove('active');
+      document.getElementById('simStageText').textContent='Status: kendaraan siap memasuki area pemeriksaan.';
+      document.getElementById('simProgress').textContent='MENUNGGU PERINTAH';
+      document.getElementById('simStart').disabled=false;
+      document.getElementById('simStart').textContent='▶ Mulai simulasi';
+      document.getElementById('simResult').innerHTML='<div class="sim-metric"><small>Berat WIM</small><b>—</b></div><div class="sim-metric"><small>JBI</small><b>—</b></div><div class="sim-metric"><small>Dimensi P × L × T</small><b>—</b></div><div class="sim-metric"><small>Hasil indikasi</small><b>Belum dipindai</b></div>';
+    }
+    function startSim(){
+      if(simBusy)return;
+      resetSim();simBusy=true;
+      const v=simSelected();
+      let step=0;
+      document.getElementById('simStart').disabled=true;
+      document.getElementById('simTruck').classList.add('moving');
+      const runStep=()=>{
+        const [message,label]=simStages[step];
+        document.getElementById('simStageText').textContent=message;
+        document.getElementById('simProgress').textContent=label;
+        document.getElementById('simBeam').classList.toggle('active',step===1||step===2);
+        if(step===3){
+          cameraPassCount++;
+          if(v.Status_Indikasi_Sistem === 'Indikasi ODOL') cameraOdolCount++;
+          updateCameraCounters();
+          showSimResult(v);
+          document.getElementById('simStart').disabled=false;
+          document.getElementById('simStart').textContent='▶ Simulasikan lagi';
+          simBusy=false;clearInterval(simTimer);simTimer=null;return;
+        }
+        step++;
+      };
+      runStep();simTimer=setInterval(runStep,950);
+    }
+    const simSelect=document.getElementById('simVehicle');
+    simSelect.innerHTML=vehicles.map(v=>'<option value="'+v.ID_Kendaraan+'">'+v.ID_Kendaraan+' · '+v.Jenis_Kendaraan+'</option>').join('');
+    simSelect.value='VEH-011';
+    document.getElementById('simStart').addEventListener('click',startSim);
+    document.getElementById('simReset').addEventListener('click',resetSim);
+    simSelect.addEventListener('change',resetSim);
+
+
+    // Dual camera preview: local video files for demonstration and HLS URL for approved server streams.
+    const cameraPlayers = {};
+    let cameraPassCount = 0;
+    let cameraOdolCount = 0;
+    function updateCameraCounters(){
+      const connected = ['Top','Side'].filter(slot => {
+        const state = document.getElementById('state'+slot);
+        return state && (state.textContent === 'VIDEO DEMO' || state.textContent === 'STREAM HLS');
+      }).length;
+      document.getElementById('cameraPassCount').textContent = cameraPassCount;
+      document.getElementById('cameraOdolCount').textContent = cameraOdolCount;
+      document.getElementById('cameraSourceCount').textContent = connected + ' / 2 terhubung';
+    }
+    function captureCameraFrame(slot){
+      const video = document.getElementById('video'+slot);
+      if(!video.videoWidth || !video.videoHeight){alert('Belum ada video aktif untuk diambil cuplikannya.');return;}
+      try{
+        const canvas = document.createElement('canvas');
+        canvas.width = video.videoWidth; canvas.height = video.videoHeight;
+        canvas.getContext('2d').drawImage(video,0,0,canvas.width,canvas.height);
+        const link = document.createElement('a');
+        link.download = 'tolsmart-'+slot.toLowerCase()+'-snapshot-'+Date.now()+'.jpg';
+        link.href = canvas.toDataURL('image/jpeg',0.92); link.click();
+      }catch(error){
+        alert('Cuplikan tidak dapat disimpan. Periksa izin akses/CORS dari sumber video.');
+      }
+    }
+    function fullscreenCamera(slot){
+      const frame = document.getElementById('video'+slot).parentElement;
+      if(frame.requestFullscreen) frame.requestFullscreen();
+    }
+    function clearCamera(slot){
+      cameraStop(slot);
+      document.getElementById('file'+slot).value = '';
+      document.getElementById('url'+slot).value = '';
+      cameraSetStatus(slot,'Sumber video diputus',false);
+      updateCameraCounters();
+    }
+    function updateTopSensorOverlay(){
+      const video=document.getElementById('videoTop');
+      const overlay=document.getElementById('topSensorOverlay');
+      const readout=document.getElementById('topSensorReadout');
+      const caption=document.getElementById('topSensorCaption');
+      const hasVideo=!!video.src && Number.isFinite(video.duration) && video.duration>0;
+      overlay.classList.toggle('active',hasVideo);
+      if(!hasVideo) return;
+      const p=Math.max(0,Math.min(1,video.currentTime/video.duration));
+      const v=simSelected();
+      const detected=p>=0.18 && p<=0.78;
+      const passed=p>0.78;
+      if(detected){
+        readout.innerHTML='KENDARAAN: <b>TERDETEKSI</b><br>ANPR: <b>'+v.ID_Kendaraan+'</b><br>WIM: <b>SIAP BACA</b>';
+        caption.textContent='ZONA DETEKSI AKTIF · DATA KENDARAAN SIMULASI';
+      }else{
+        readout.innerHTML='KENDARAAN: <b>'+(passed?'SELESAI MELINTAS':'MENUNGGU')+'</b><br>ANPR: '+(passed?'TERSIMPAN':'MEMANTAU')+'<br>WIM: '+(passed?'SELESAI':'STANDBY');
+        caption.textContent=passed?'KENDARAAN MELEWATI ZONA · SIMULASI':'MENUNGGU KENDARAAN MEMASUKI ZONA';
+      }
+    }
+    function updateVideoSensorOverlay(slot){
+      if(slot!=='Side') return;
+      const video=document.getElementById('videoSide');
+      const overlay=document.getElementById('videoSensorOverlay');
+      const beam=document.getElementById('videoScanBeam');
+      const readout=document.getElementById('videoSensorReadout');
+      const caption=document.getElementById('videoScanCaption');
+      const hasVideo=!!video.src && Number.isFinite(video.duration) && video.duration>0;
+      overlay.classList.toggle('active',hasVideo);
+      if(!hasVideo) return;
+      const progress=Math.max(0,Math.min(1,video.currentTime/video.duration));
+      beam.style.left=(8+progress*84)+'%';
+      const v=simSelected();
+      // Demonstration timing window: axle crossing is represented by a configurable portion of the clip.
+      const crossing=progress>=0.42 && progress<=0.68;
+      const passed=progress>0.68;
+      if(crossing){
+        readout.innerHTML='WIM: <b>'+v.Berat_WIM_Ton.toFixed(1)+' ton</b><br>JBI: '+v.JBI_Ton.toFixed(1)+' ton<br>Laser: <b>MEMINDAI</b>';
+        caption.textContent='RODA MELINTASI ZONA TIMBANG · PEMBACAAN SIMULASI';
+        caption.classList.add('done');
+        document.getElementById('sensorState').textContent='PEMINDAIAN VIDEO (SIMULASI)';
+        document.getElementById('sensorWeight').textContent=v.Berat_WIM_Ton.toFixed(1)+' ton';
+        document.getElementById('sensorJbi').textContent=v.JBI_Ton.toFixed(1)+' ton';
+        document.getElementById('sensorHeight').textContent=v.Tinggi_m.toFixed(2)+' m';
+        document.getElementById('sensorWidth').textContent=v.Lebar_m.toFixed(2)+' m';
+        document.getElementById('sensorLength').textContent=v.Panjang_m.toFixed(2)+' m';
+        document.getElementById('sensorPlate').textContent=v.ID_Kendaraan+' (data demo)';
+        document.getElementById('scaleState').textContent='ZONA TIMBANG';
+        document.getElementById('scaleDisplay').innerHTML=Math.round(v.Berat_WIM_Ton*1000).toLocaleString('id-ID')+' <span class="text-sm">kg</span>';
+        document.getElementById('scaleBar').style.width=Math.min(100,(v.Berat_WIM_Ton/40)*100)+'%';
+      }else{
+        readout.innerHTML='WIM: <b>'+(passed?'SELESAI':'MENUNGGU')+'</b><br>Laser: '+(passed?'PEMINDAIAN SELESAI':'MENGIKUTI VIDEO');
+        caption.textContent=passed?'PEMINDAIAN SIMULASI SELESAI':'OVERLAY SIMULASI · MENGIKUTI PEMUTARAN VIDEO';
+        caption.classList.remove('done');
+      }
+    }
+    function cameraSetStatus(slot,label,connected){
+      const state=document.getElementById('state'+slot);
+      const dot=document.getElementById('dot'+slot);
+      state.textContent=label;
+      dot.classList.toggle('on',!!connected);
+      document.getElementById('status'+slot).textContent=connected?'Sumber video berhasil dimuat pada browser.':label;
+      document.getElementById('placeholder'+slot).style.display=connected?'none':'flex';
+      if(slot==='Side') document.getElementById('sideSimulation').style.display=connected?'none':'block';
+      if(typeof updateCameraCounters === 'function') updateCameraCounters();
+    }
+    function cameraStop(slot){
+      const video=document.getElementById('video'+slot);
+      if(cameraPlayers[slot]){try{cameraPlayers[slot].destroy();}catch(e){} cameraPlayers[slot]=null;}
+      video.pause();video.removeAttribute('src');video.load();
+      if(video.dataset.objectUrl){URL.revokeObjectURL(video.dataset.objectUrl);delete video.dataset.objectUrl;}
+    }
+    function connectCamera(slot){
+      const file=document.getElementById('file'+slot).files[0];
+      const url=document.getElementById('url'+slot).value.trim();
+      const video=document.getElementById('video'+slot);
+      cameraStop(slot);
+      if(file){
+        const objectUrl=URL.createObjectURL(file);video.dataset.objectUrl=objectUrl;video.src=objectUrl;
+        video.onloadeddata=()=>cameraSetStatus(slot,'VIDEO DEMO',true);
+        video.onerror=()=>cameraSetStatus(slot,'Video tidak dapat diputar',false);
+        video.load();return;
+      }
+      if(!url){cameraSetStatus(slot,'Belum ada video/URL stream',false);return;}
+      if(window.Hls && Hls.isSupported()){
+        const hls=new Hls();cameraPlayers[slot]=hls;
+        hls.loadSource(url);hls.attachMedia(video);
+        hls.on(Hls.Events.MANIFEST_PARSED,()=>cameraSetStatus(slot,'STREAM HLS',true));
+        hls.on(Hls.Events.ERROR,(event,data)=>{if(data.fatal)cameraSetStatus(slot,'Stream gagal dimuat / akses ditolak',false);});
+      }else if(video.canPlayType('application/vnd.apple.mpegurl')){
+        video.src=url;video.onloadedmetadata=()=>cameraSetStatus(slot,'STREAM HLS',true);
+        video.onerror=()=>cameraSetStatus(slot,'Stream gagal dimuat / akses ditolak',false);
+      }else{
+        cameraSetStatus(slot,'Browser tidak mendukung HLS',false);
+      }
+    }
+    const topVideo=document.getElementById('videoTop');
+    ['timeupdate','play','pause','seeked','loadedmetadata'].forEach(evt=>{
+      topVideo.addEventListener(evt,updateTopSensorOverlay);
+    });
+    topVideo.addEventListener('ended',updateTopSensorOverlay);
+    const sideVideo=document.getElementById('videoSide');
+    ['timeupdate','play','pause','seeked','loadedmetadata'].forEach(evt=>{
+      sideVideo.addEventListener(evt,()=>updateVideoSensorOverlay('Side'));
+    });
+    sideVideo.addEventListener('ended',()=>updateVideoSensorOverlay('Side'));
+    ['Top','Side'].forEach(slot=>{
+      document.getElementById('file'+slot).addEventListener('change',()=>{if(document.getElementById('file'+slot).files[0])connectCamera(slot);});
+    });
+
+    renderSummary();
+    renderTable();
+    updateCameraCounters();
+    document.getElementById('stateSide').textContent='SIMULASI SAMPING';
+    document.getElementById('statusSide').textContent='Animasi tampak samping aktif sebagai pengganti rekaman kamera kedua. Unggah video asli atau hubungkan stream resmi untuk menggantinya.';
+    document.getElementById('dotSide').classList.add('on');
+  </script>
+</body>
+</html>
