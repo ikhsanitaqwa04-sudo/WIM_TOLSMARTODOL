@@ -6,9 +6,6 @@
   <title>TOLSMART-ODOL (SIMULASI) — Deteksi WIM, Aturan ODOL & Verifikasi Petugas</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/supabase-config.js?v=20261122-2"></script>
-  <script src="assets/auth-guard.js?v=20261122-3" defer></script>
 
 
 <style>
@@ -153,16 +150,8 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
 .project-table th{color:#526b85;background:#f3f7fb}
 @media(max-width:760px){.camera-grid{grid-template-columns:1fr}.project-grid{grid-template-columns:1fr}}
 
-body.auth-checking{visibility:hidden}
-</style>
-<style>
-.auth-userbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.auth-userbar .role-chip{font-size:10px;padding:5px 9px;border-radius:999px;background:#163d5b;color:#aee4ff;border:1px solid #315c7a;font-weight:800}
-.auth-userbar button{font-size:11px;font-weight:800;padding:8px 12px;border-radius:8px;background:#1d5d9c;color:#fff}
-body.auth-checking{visibility:hidden}
-</style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans auth-checking">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans">
   <header class="bg-slate-900 border-b border-slate-800 px-6 py-4 flex flex-wrap items-center justify-between gap-3">
     <div>
       <div class="flex items-center gap-2">
@@ -174,14 +163,9 @@ body.auth-checking{visibility:hidden}
     <div class="text-xs bg-slate-800 px-3 py-2 rounded border border-slate-700 text-slate-300">
       Catatan: Hasil sensor bersifat <strong>indikasi awal (simulasi)</strong>, bukan tilang otomatis.
     </div>
-    <div class="auth-userbar" id="authUserBar" aria-live="polite">
-      <span class="role-chip" id="authRoleLabel">Memeriksa sesi...</span>
-      <span class="text-xs text-slate-300" id="authUserEmail"></span>
-      <button type="button" id="logoutButton">Keluar</button>
-    </div>
   </header>
 
-  <div class="site-nav"><div class="nav-brand">TOLSMART <span style="color:#2685c7">•</span> ODOL</div><nav aria-label="Navigasi utama"><a href="#beranda">Beranda</a><a href="#dashboard">Dashboard</a><a href="#kamera">Kamera CCTV</a><a href="#area-wim">Area Sensor</a><a href="#konsep">Konsep PKL</a><a href="#simulator">Simulasi WIM</a><a href="#data">Data Kendaraan</a><a href="#verifikasi">Verifikasi</a></nav><span class="nav-status">● PROTOTIPE SIMULASI</span><a href="login.html" class="text-xs font-bold text-sky-300">Login</a></div>
+  <div class="site-nav"><div class="nav-brand">TOLSMART <span style="color:#2685c7">•</span> ODOL</div><nav aria-label="Navigasi utama"><a href="#beranda">Beranda</a><a href="#dashboard">Dashboard</a><a href="#kamera">Kamera CCTV</a><a href="#area-wim">Area Sensor</a><a href="#konsep">Konsep PKL</a><a href="#simulator">Simulasi WIM</a><a href="#data">Data Kendaraan</a><a href="#verifikasi">Verifikasi</a></nav><span class="nav-status">● PROTOTIPE SIMULASI</span></div>
   <main class="max-w-7xl mx-auto p-6 space-y-6">
 <section class="hero" id="beranda">
  <div><span class="hero-tag">PROTOTIPE SISTEM TRANSPORTASI CERDAS</span><h2>Deteksi kendaraan ODOL melalui teknologi WIM dan sensor dimensi</h2><p>Kendaraan melintas pada area sensor. Sistem membaca berat secara dinamis, kamera ANPR mengenali identitas kendaraan, dan sensor dimensi memeriksa profil panjang, lebar, serta tinggi. Hasilnya dikirim ke dashboard untuk ditinjau petugas.</p><div class="flex flex-wrap gap-2 mt-4"><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● WIM aktif (simulasi)</span><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● ANPR & CCTV</span><span class="px-3 py-2 rounded-lg bg-slate-800 text-cyan-200 text-xs">● Sensor dimensi</span></div></div>
