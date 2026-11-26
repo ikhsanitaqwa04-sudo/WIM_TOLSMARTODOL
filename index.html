@@ -86,6 +86,10 @@ section.bg-slate-900 .text-slate-300{color:#526780!important}
 .camera-card{background:#fff;border:1px solid #dce7f2;border-radius:16px;padding:15px;box-shadow:0 7px 22px #2445680a;min-width:0}
 .camera-frame{position:relative;background:#101c2a;border-radius:12px;overflow:hidden;aspect-ratio:16/9;display:flex;align-items:center;justify-content:center}
 .camera-frame video{width:100%;height:100%;object-fit:contain;background:#101c2a}
+.ai-detection-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:9}
+.ai-camera-status{font-size:10px;color:#1769aa;margin-top:5px;min-height:15px}
+.ai-camera-actions{display:flex;gap:7px;flex-wrap:wrap;margin-top:8px}
+.ai-camera-actions button{padding:7px 10px;border:1px solid #b8d7ef;border-radius:8px;background:#edf7ff;color:#155a91;font-size:10px;font-weight:800}
 .camera-placeholder{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:8px;color:#c9d9e8;text-align:center;padding:16px;pointer-events:none}
 .camera-controls{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}
 .camera-controls input[type=file]{max-width:100%;font-size:11px;color:#61758c}
@@ -255,14 +259,16 @@ footer{color:#8191a4!important}
  <div class="camera-grid">
   <article class="camera-card">
    <div class="flex justify-between items-center gap-2 mb-3"><div><div class="text-xs font-extrabold text-sky-700">CAMERA 01</div><h3 class="font-extrabold text-slate-800">Kamera tampak atas (Top View)</h3></div><span class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600"><span class="camera-live-dot" id="dotTop"></span><span id="stateTop">Belum terhubung</span></span></div>
-   <div class="camera-frame"><video id="videoTop" controls muted playsinline></video><div class="top-sensor-overlay" id="topSensorOverlay"><div class="lane-zone"></div><div class="top-scan"></div><div class="top-tag">CAM 01 · TOP VIEW<br>ANPR + ZONA DETEKSI</div><div class="top-readout" id="topSensorReadout">KENDARAAN: MENUNGGU<br>ANPR: STANDBY<br>WIM: STANDBY</div><div class="top-caption" id="topSensorCaption">OVERLAY SENSOR SIMULASI · MENGIKUTI VIDEO</div></div><div class="camera-placeholder" id="placeholderTop"><span style="font-size:34px">◉</span><b>Feed kamera tampak atas</b><span style="font-size:11px;color:#9fb2c7">Pilih video rekaman atau masukkan URL HLS dari server integrasi.</span></div></div>
+   <div class="camera-frame"><video id="videoTop" controls muted playsinline></video><canvas class="ai-detection-canvas" id="aiCanvasTop"></canvas><div class="top-sensor-overlay" id="topSensorOverlay"><div class="lane-zone"></div><div class="top-scan"></div><div class="top-tag">CAM 01 · TOP VIEW<br>ANPR + ZONA DETEKSI</div><div class="top-readout" id="topSensorReadout">KENDARAAN: MENUNGGU<br>ANPR: STANDBY<br>WIM: STANDBY</div><div class="top-caption" id="topSensorCaption">OVERLAY SENSOR SIMULASI · MENGIKUTI VIDEO</div></div><div class="camera-placeholder" id="placeholderTop"><span style="font-size:34px">◉</span><b>Feed kamera tampak atas</b><span style="font-size:11px;color:#9fb2c7">Pilih video rekaman atau masukkan URL HLS dari server integrasi.</span></div></div>
    <div class="camera-controls"><input id="fileTop" type="file" accept="video/*" aria-label="Pilih video kamera tampak atas"/><input id="urlTop" type="text" placeholder="URL stream HLS (opsional)"/><button type="button" onclick="connectCamera('Top')">Hubungkan</button><button type="button" onclick="startDeviceCamera('Top')">Gunakan Kamera Perangkat</button></div>
    <div class="camera-status" id="statusTop">Mode demo: belum ada sumber video. Kamera fisik belum terhubung.</div>
+<div class="ai-camera-actions"><button type="button" onclick="toggleVideoAI('Top')">Aktifkan Analisis AI</button><button type="button" onclick="stopVideoAI('Top')">Hentikan AI</button></div>
+<div class="ai-camera-status" id="aiStatusTop">AI belum aktif · deteksi visual kendaraan</div>
    <div class="camera-actions"><button type="button" onclick="captureCameraFrame('Top')">Simpan cuplikan</button><button type="button" onclick="fullscreenCamera('Top')">Perbesar video</button><button type="button" onclick="clearCamera('Top')">Putuskan sumber</button></div>
   </article>
   <article class="camera-card">
    <div class="flex justify-between items-center gap-2 mb-3"><div><div class="text-xs font-extrabold text-sky-700">CAMERA 02</div><h3 class="font-extrabold text-slate-800">Kamera tampak samping (Side View)</h3></div><span class="text-xs rounded-full px-3 py-1 bg-slate-100 text-slate-600"><span class="camera-live-dot" id="dotSide"></span><span id="stateSide">Belum terhubung</span></span></div>
-   <div class="camera-frame"><video id="videoSide" controls muted playsinline></video><div class="video-sensor-overlay" id="videoSensorOverlay"><div class="scan-beam" id="videoScanBeam"></div><div class="scale-zone"></div><div class="readout" id="videoSensorReadout">WIM: MENUNGGU<br>Laser: STANDBY</div><div class="scan-caption" id="videoScanCaption">OVERLAY SIMULASI · MENGIKUTI PEMUTARAN VIDEO</div></div><div class="side-sim" id="sideSimulation">
+   <div class="camera-frame"><video id="videoSide" controls muted playsinline></video><canvas class="ai-detection-canvas" id="aiCanvasSide"></canvas><div class="video-sensor-overlay" id="videoSensorOverlay"><div class="scan-beam" id="videoScanBeam"></div><div class="scale-zone"></div><div class="readout" id="videoSensorReadout">WIM: MENUNGGU<br>Laser: STANDBY</div><div class="scan-caption" id="videoScanCaption">OVERLAY SIMULASI · MENGIKUTI PEMUTARAN VIDEO</div></div><div class="side-sim" id="sideSimulation">
     <div class="sim-skyline"></div><div class="sim-road"></div><div class="overlay"><span>CAM 02 · SIDE PROFILE / SIMULATION</span><span>● SIMULASI AKTIF</span></div>
     <div class="gantry"></div><div class="sensor-head" title="Sensor laser dimensi"></div><div class="laser"></div>
     <div class="truck"><div class="truck-label">ANPR · DETEKSI DIMENSI</div><svg viewBox="0 0 420 150" role="img" aria-label="Ilustrasi truk tampak samping melintasi sensor dan timbangan"><rect x="20" y="35" width="245" height="85" rx="5" fill="#e9edf1" stroke="#263f55" stroke-width="4"/><path d="M265 70 L320 70 L365 100 L365 120 L265 120Z" fill="#1976b9" stroke="#263f55" stroke-width="4"/><path d="M320 75 L350 75 L365 98 L320 98Z" fill="#9ed8f3" stroke="#263f55" stroke-width="3"/><rect x="35" y="48" width="210" height="9" fill="#9eb0bf"/><rect x="35" y="65" width="210" height="45" fill="#d1dbe3"/><path d="M45 75 H235 M45 91 H235" stroke="#9aabba" stroke-width="2"/><circle cx="85" cy="122" r="18" fill="#182b3c"/><circle cx="85" cy="122" r="8" fill="#aab8c5"/><circle cx="300" cy="122" r="18" fill="#182b3c"/><circle cx="300" cy="122" r="8" fill="#aab8c5"/><circle cx="350" cy="122" r="18" fill="#182b3c"/><circle cx="350" cy="122" r="8" fill="#aab8c5"/></svg></div>
@@ -270,10 +276,12 @@ footer{color:#8191a4!important}
   </div><div class="camera-placeholder" id="placeholderSide" style="display:none"></div></div>
    <div class="camera-controls"><input id="fileSide" type="file" accept="video/*" aria-label="Pilih video kamera tampak samping"/><input id="urlSide" type="text" placeholder="URL stream HLS (opsional)"/><button type="button" onclick="connectCamera('Side')">Hubungkan</button><button type="button" onclick="startDeviceCamera('Side')">Gunakan Kamera Perangkat</button></div>
    <div class="camera-status" id="statusSide">Mode demo: belum ada sumber video. Kamera fisik belum terhubung.</div>
+<div class="ai-camera-actions"><button type="button" onclick="toggleVideoAI('Side')">Aktifkan Analisis AI</button><button type="button" onclick="stopVideoAI('Side')">Hentikan AI</button></div>
+<div class="ai-camera-status" id="aiStatusSide">AI belum aktif · deteksi visual kendaraan</div>
    <div class="camera-actions"><button type="button" onclick="captureCameraFrame('Side')">Simpan cuplikan</button><button type="button" onclick="fullscreenCamera('Side')">Perbesar video</button><button type="button" onclick="clearCamera('Side')">Putuskan sumber</button></div>
   </article>
  </div>
-<div class="camera-counter"><div class="counter-tile"><span>Kendaraan selesai diproses (simulasi)</span><b id="cameraPassCount">0</b></div><div class="counter-tile"><span>Indikasi ODOL pada simulasi</span><b id="cameraOdolCount">0</b></div><div class="counter-tile"><span>Status sumber kamera</span><b id="cameraSourceCount" style="font-size:14px">0 / 2 terhubung</b></div></div><p class="camera-hint">Penghitung mengikuti simulasi WIM dan status video yang dimuat. Ini belum merupakan penghitung otomatis dari rekaman CCTV; penghitungan kamera fisik memerlukan analitik video atau sensor penghitung terintegrasi.</p>
+<div class="camera-counter"><div class="counter-tile"><span>Kendaraan selesai diproses (simulasi)</span><b id="cameraPassCount">0</b></div><div class="counter-tile"><span>Indikasi ODOL pada simulasi</span><b id="cameraOdolCount">0</b></div><div class="counter-tile"><span>Status sumber kamera</span><b id="cameraSourceCount" style="font-size:14px">0 / 2 terhubung</b></div></div><p class="camera-hint">Analisis AI memproses frame video untuk mendeteksi objek kendaraan (mobil, bus, truk, sepeda motor). Berat dan dimensi tetap berasal dari sensor WIM/dimensi atau dataset simulasi; rekomendasi pemeriksaan bukan keputusan pelanggaran otomatis.</p>
 <div class="rounded-xl border border-slate-200 bg-slate-50 p-3 space-y-3">
   <div class="flex items-center justify-between gap-2"><div><b class="text-sm text-slate-800">Panel pembacaan sensor WIM</b><p class="text-xs text-slate-500">Nilai berubah saat kendaraan simulasi selesai melewati area pemeriksaan.</p></div><span class="text-xs rounded-full bg-amber-100 text-amber-800 px-2 py-1 font-bold" id="sensorState">MENUNGGU KENDARAAN</span></div>
   <div class="sensor-readout">
@@ -479,6 +487,8 @@ footer{color:#8191a4!important}
 </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/coco-ssd@2.2.3"></script>
   <script>
     const SUPABASE_URL = "https://synguindhayvrkynkdae.supabase.co";
     const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_7D1ATYSaYKqv0XVV9Y1X7Q__pOs89wp";
@@ -631,6 +641,51 @@ footer{color:#8191a4!important}
     simSelect.addEventListener('change',resetSim);
 
 
+
+    // AI visual detection in browser with TensorFlow.js COCO-SSD. Not ANPR, WIM or calibrated dimension sensing.
+    let vehicleAiModel=null, vehicleAiLoading=false;
+    const vehicleAiRunning={Top:false,Side:false}, vehicleAiTimers={Top:null,Side:null};
+    const vehicleAiClasses=new Set(["car","truck","bus","motorcycle","bicycle"]);
+    async function loadVehicleAiModel(){
+      if(vehicleAiModel)return vehicleAiModel;
+      if(vehicleAiLoading){while(vehicleAiLoading&&!vehicleAiModel)await new Promise(r=>setTimeout(r,200));if(vehicleAiModel)return vehicleAiModel;}
+      vehicleAiLoading=true;
+      try{if(!window.tf||!window.cocoSsd)throw new Error("Pustaka AI belum termuat. Periksa koneksi internet.");await tf.ready();vehicleAiModel=await cocoSsd.load({base:"lite_mobilenet_v2"});return vehicleAiModel;}
+      finally{vehicleAiLoading=false;}
+    }
+    function updateAiDecision(slot,found){
+      const v=simSelected(),m=simMetrics(v),dims=["Panjang","Lebar","Tinggi"].filter((x,i)=>m.dims[i]),flag=m.over>0||dims.length>0;
+      const classes=found.map(x=>x.class).filter((x,i,a)=>a.indexOf(x)===i).join(", ")||"belum terdeteksi";
+      const lines=["Kendaraan dataset: "+v.ID_Kendaraan+" · "+v.Jenis_Kendaraan,"AI kamera "+slot+": "+found.length+" objek terdeteksi ("+classes+").","WIM: "+v.Berat_WIM_Ton.toFixed(1)+" ton / JBI "+v.JBI_Ton.toFixed(1)+" ton.","Dimensi: "+v.Panjang_m+" × "+v.Lebar_m+" × "+v.Tinggi_m+" m.","Indikasi: "+(m.over>0?"berat di atas JBI; ":"")+(dims.length?"dimensi melebihi acuan "+dims.join(", "):"dimensi dalam acuan")+"."]; 
+      const panel=document.getElementById("aiDecisionPanel");
+      if(panel)panel.innerHTML="<b class='"+(flag?"text-amber-700":"text-emerald-700")+"'>"+(flag?"DIREKOMENDASIKAN PEMERIKSAAN LANJUTAN":"BELUM ADA INDIKASI DARI DATA SENSOR")+"</b><div class='text-xs text-slate-600 mt-2'>"+lines.map(x=>"<div>"+x+"</div>").join("")+"</div><div class='text-xs text-slate-500 mt-2'>Data sensor pada panel ini berasal dari dataset simulasi kendaraan terpilih, bukan pengukuran langsung dari video. Keputusan akhir tetap oleh petugas.</div>";
+    }
+    function drawVehicleAi(slot,preds){
+      const video=document.getElementById("video"+slot),canvas=document.getElementById("aiCanvas"+slot);if(!video.videoWidth||!video.videoHeight)return;
+      canvas.width=video.videoWidth;canvas.height=video.videoHeight;const ctx=canvas.getContext("2d");ctx.clearRect(0,0,canvas.width,canvas.height);
+      const found=preds.filter(p=>vehicleAiClasses.has(p.class)&&p.score>=0.45);
+      found.forEach(p=>{const [x,y,w,h]=p.bbox,label=p.class.toUpperCase()+" "+Math.round(p.score*100)+"%";ctx.lineWidth=Math.max(2,canvas.width/500);ctx.strokeStyle="#00e5a8";ctx.strokeRect(x,y,w,h);ctx.font="bold "+Math.max(13,canvas.width/70)+"px Arial";const lh=Math.max(22,canvas.width/45),tw=ctx.measureText(label).width;ctx.fillStyle="rgba(0,20,35,.85)";ctx.fillRect(x,Math.max(0,y-lh),tw+12,lh);ctx.fillStyle="#fff";ctx.fillText(label,x+6,Math.max(15,y-6));});
+      document.getElementById("aiStatus"+slot).textContent="AI AKTIF · "+found.length+" objek kendaraan pada frame ini · COCO-SSD";updateAiDecision(slot,found);
+    }
+    async function runVehicleAiFrame(slot){
+      if(!vehicleAiRunning[slot])return;const video=document.getElementById("video"+slot);
+      if(video.readyState>=2&&!video.paused&&!video.ended){try{const p=await vehicleAiModel.detect(video);if(vehicleAiRunning[slot])drawVehicleAi(slot,p);}catch(e){document.getElementById("aiStatus"+slot).textContent="Analisis gagal: "+(e.message||"kesalahan");stopVideoAI(slot);return;}}
+      if(vehicleAiRunning[slot])vehicleAiTimers[slot]=setTimeout(()=>runVehicleAiFrame(slot),700);
+    }
+    async function toggleVideoAI(slot){
+      const video=document.getElementById("video"+slot),status=document.getElementById("aiStatus"+slot);
+      if(!video.src&&!video.srcObject){status.textContent="Muat video terlebih dahulu melalui tombol Hubungkan.";return;}
+      if(video.paused){try{await video.play();}catch(e){status.textContent="Tekan Play pada video terlebih dahulu.";return;}}
+      status.textContent="Memuat model AI kendaraan…";
+      try{await loadVehicleAiModel();vehicleAiRunning[slot]=true;status.textContent="Model siap, analisis berjalan…";runVehicleAiFrame(slot);}
+      catch(e){status.textContent="Model AI tidak dapat dimuat: "+(e.message||"periksa koneksi internet");}
+    }
+    function stopVideoAI(slot){
+      vehicleAiRunning[slot]=false;if(vehicleAiTimers[slot]){clearTimeout(vehicleAiTimers[slot]);vehicleAiTimers[slot]=null;}
+      const c=document.getElementById("aiCanvas"+slot);if(c){const x=c.getContext("2d");x.clearRect(0,0,c.width,c.height);}
+      const status=document.getElementById("aiStatus"+slot);if(status)status.textContent="Analisis AI dihentikan.";
+    }
+
     // Dual camera preview: local video files for demonstration and HLS URL for approved server streams.
     const cameraPlayers = {};
     let cameraPassCount = 0;
@@ -736,6 +791,7 @@ footer{color:#8191a4!important}
       if(typeof updateCameraCounters === 'function') updateCameraCounters();
     }
     function cameraStop(slot){
+      if(typeof stopVideoAI==="function")stopVideoAI(slot);
       const video=document.getElementById('video'+slot);
       if(cameraPlayers[slot]){try{cameraPlayers[slot].destroy();}catch(e){} cameraPlayers[slot]=null;}
       if(video.srcObject){video.srcObject.getTracks().forEach(track=>track.stop());video.srcObject=null;}
